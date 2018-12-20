@@ -451,7 +451,7 @@ def stop():
     os.kill(pid, signal.SIGINT)
 
 
-trayicon = Image.open('icon.png')
+trayicon = Image.open(os.path.join('assets', 'icon.png'))
 icon = pystray.Icon('HOTKEY', trayicon, 'HOTKEY')
 icon.menu = pystray.Menu(
     pystray.MenuItem('HOTKEY 0.0.1', lambda item: None),
