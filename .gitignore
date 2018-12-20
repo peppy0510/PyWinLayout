@@ -1,0 +1,8 @@
+*/__pycache__
+*/__test__
+*.txt
+*.pyc
+*.pyo
+dist
+build
+/venv
