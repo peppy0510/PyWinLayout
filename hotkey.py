@@ -11,8 +11,9 @@ email: peppy0510@hotmail.com
 
 
 import atexit
+import ctypes
 import importlib
-import keyboard
+import keyboardex as keyboard
 import operator
 import os
 import psutil
@@ -31,39 +32,39 @@ from PIL import Image
 
 
 LAYOUT_PRESET = {
-    'windows+keypad5': {
+    'windows+5': {
         'landscape': [((1 - v) / 2, 0.00, v, 1.00) for v in (1.00, 0.50, 0.34,)],
         'portrait': [(0.00, (1 - v) / 2, 1.00, v) for v in (1.00, 0.50,)]
     },
-    'windows+keypad2': {
+    'windows+2': {
         'landscape': [((1 - v) / 2, 0.50, v, 0.50) for v in (1.00, 0.50, 0.34,)],
         'portrait': [(0.00, 1 - v, 1.00, v) for v in (0.75, 0.50, 0.25,)]
     },
-    'windows+keypad8': {
+    'windows+8': {
         'landscape': [((1 - v) / 2, 0.00, v, 0.50) for v in (1.00, 0.50, 0.34,)],
         'portrait': [(0.00, 0.00, 1.00, v) for v in (0.75, 0.50, 0.25,)]
     },
-    'windows+keypad4': {
+    'windows+4': {
         'landscape': [(0.00, 0.00, v, 1.00) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.00, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50,)]
     },
-    'windows+keypad6': {
+    'windows+6': {
         'landscape': [(1 - v, 0.00, v, 1.00) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.50, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50,)]
     },
-    'windows+keypad1': {
+    'windows+1': {
         'landscape': [(0.00, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.00, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     },
-    'windows+keypad3': {
+    'windows+3': {
         'landscape': [(1 - v, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.50, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     },
-    'windows+keypad7': {
+    'windows+7': {
         'landscape': [(0.00, 0.00, v, 0.50) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.00, 0.00, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     },
-    'windows+keypad9': {
+    'windows+9': {
         'landscape': [(1 - v, 0.00, v, 0.50) for v in (0.67, 0.50, 0.33,)],
         'portrait': [(0.50, 0.00, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     },
@@ -139,13 +140,6 @@ HOTKEY_PRESET = {
 }
 
 
-boldendc = ['\033[1m', '\033[0m']
-redendc = ['\033[91m', '\033[0m']
-blueendc = ['\033[94m', '\033[0m']
-grayendc = ['\033[90m', '\033[0m']
-boldgrayendc = ['\033[1m' + '\033[90m', '\033[0m']
-
-
 def sort_preset_hotkey(preset):
     modifiers = sorted(['alt', 'ctrl', 'shift', 'windows'])
     for old_key in preset.keys():
@@ -159,37 +153,6 @@ def sort_preset_hotkey(preset):
 
 LAYOUT_PRESET = sort_preset_hotkey(LAYOUT_PRESET)
 HOTKEY_PRESET = sort_preset_hotkey(HOTKEY_PRESET)
-
-
-# class keyboard(keyboard):
-
-#     def __init__(self, *argvs, **kwargs):
-#         print(argvs)
-#         print(kwargs)
-#         super(self.__class__, self).__init__(*argvs, **kwargs)
-
-#     def read_hotkey(suppress=True):
-#         """
-#         Similar to `read_key()`, but blocks until the user presses and releases a
-#         hotkey (or single key), then returns a string representing the hotkey
-#         pressed.
-#         Example:
-#             read_hotkey()
-#             # "ctrl+shift+p"
-#         """
-#         queue = keyboard._queue.Queue()
-
-#         def fn(e):
-#             return queue.put(e) or e.event_type == keyboard.KEY_DOWN
-#         # fn = lambda e: queue.put(e) or e.event_type == keyboard.KEY_DOWN
-#         hooked = keyboard.hook(fn, suppress=suppress)
-#         while True:
-#             event = queue.get()
-#             if event.event_type == keyboard.KEY_UP:
-#                 keyboard.unhook(hooked)
-#                 with keyboard._pressed_events_lock:
-#                     names = [e.name for e in keyboard._pressed_events.values()] + [event.name]
-#                 return keyboard.get_hotkey_name(names)
 
 
 class RepeatHandler():
@@ -356,11 +319,11 @@ class HotKeyManager():
                 return window
         for i in range(10):
             window = ForegroundWindowHandler()
-            time.sleep(0.05)
             if not window.error:
                 self.windows += [window]
                 return window
                 break
+            time.sleep(0.05)
 
     def get_window_informations(self, refresh=False):
 
@@ -395,12 +358,34 @@ class HotKeyManager():
                         and (title is None or (title is not None and title.lower() == window.title.lower())):
                     return window
 
+    def is_screen_locked(self):
+        return win32gui.GetForegroundWindow() == 0
+
+    def is_remote_desktop(self):
+        window = self.get_foreground_window()
+        return window and window.pname == 'mstsc.exe'
+
     def handle_hotkey_thread(self):
+
+        # user32 = ctypes.windll.User32
+        # OpenDesktop = user32.OpenDesktopA
+        # SwitchDesktop = user32.SwitchDesktop
+        # DESKTOP_SWITCHDESKTOP = 0x0100
+        # hDesktop = OpenDesktop('default', 0, False, DESKTOP_SWITCHDESKTOP)
+        # # user32.LockWorkStation()
+        # time.sleep(1)
+
         while True:
             if self.stopsignal:
                 return
+            # result = SwitchDesktop(hDesktop)
+            # if self.is_screen_locked() or self.is_remote_desktop():
+            #     print('Locked')
+            # else:
+            #     print('Unlocked')
             # event = keyboard.read_event(suppress=True)
             # event = keyboard.read_hotkey(suppress=True)
+            # print(event)
             # print(event)
             # window = self.get_foreground_window()
             # if window and window.pname == 'mstsc.exe' and self.keyboard_binded:
@@ -410,7 +395,7 @@ class HotKeyManager():
             #     self.bind_keyboard()
             #     print('keyboard unbinded')
             # self.bind_keyboard()
-            time.sleep(3)
+            time.sleep(1)
 
     def handle_layout(self, hotkey):
         window = self.get_foreground_window()
@@ -487,9 +472,22 @@ class HotKeyManager():
             if HOTKEY_PRESET.get(hotkey):
                 self.handle_hotkey(hotkey)
 
-    def suppressed_hotkey_callback(self, input_hotkey):
-        print(input_hotkey)
-        self.bind_keyboard()
+    def suppressed_hotkey_callback(self, hotkey, event):
+
+        print(hotkey.ljust(14), int(keyboard.is_pressed(hotkey)), int(
+            event.is_keypad), str(event.time).split('.')[-1][-4:])
+        print('-' * 60)
+
+        if LAYOUT_PRESET.get(hotkey):
+            self.handle_layout(hotkey)
+        if HOTKEY_PRESET.get(hotkey):
+            self.handle_hotkey(hotkey)
+
+        # print(hotkey.ljust(14), int(event.is_keypad), str(event.time).split('.')[-1][-4:], keyboard.parse_hotkey(hotkey))
+        # print(event.is_keypad)
+        # print(keyboard.parse_hotkey(hotkey))4
+        # print(keyboard.parse_hotkey_combinations(hotkey))
+        # self.bind_keyboard()
         # print('suppressed_hotkey_callback():', input_hotkey)
         # print(keyboard.is_pressed(input_hotkey))
         # print(keyboard.parse_hotkey(input_hotkey))
@@ -561,8 +559,8 @@ class HotKeyManager():
 
         # keyboard.send('alt+ctrl+shift+windows', do_press=True, do_release=True)
         # for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())]:
-        for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())][:1]:
-            print(hotkey)
+        for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())]:
+            # print(hotkey)
             keyboard.add_hotkey(hotkey, self.suppressed_hotkey_callback, args=(hotkey,),
                                 suppress=True, timeout=1, trigger_on_release=False)
         self.keyboard_binded = True
@@ -585,6 +583,12 @@ class TrayIcon(pystray.Icon):
             pystray.MenuItem('Quit HOTKEY', self.stop, checked=lambda item: True),
         )
         self.visible = True
+        self.stopsignal = False
+        self.windows = []
+        self.thread = threading.Thread(target=self.watch_decktop)
+        self.thread.daemon = True
+        self.thread.start()
+
         self.run()
 
     def run(self):
@@ -592,12 +596,56 @@ class TrayIcon(pystray.Icon):
         super(self.__class__, self).run(self.hotkey_manager.run)
 
     def stop(self, *argvs):
-        # if len(argvs):
         self.hotkey_manager.stop()
         self.visible = False
         self._update_icon()
         os.kill(self.pid, signal.SIGTERM)
         super(self.__class__, self).stop()
+
+    def get_foreground_window(self):
+        hwnd = win32gui.GetForegroundWindow()
+        for window in self.windows:
+            if window.hwnd == hwnd:
+                return window
+        for i in range(10):
+            window = ForegroundWindowHandler()
+            if not window.error:
+                self.windows += [window]
+                return window
+                break
+            time.sleep(0.05)
+
+    def is_screen_locked(self):
+        return win32gui.GetForegroundWindow() == 0
+
+    def is_remote_desktop(self):
+        window = self.get_foreground_window()
+        return window and window.pname == 'mstsc.exe'
+
+    def watch_decktop(self):
+        self.locked = False
+        while not self.stopsignal:
+            # print('xxxxxxxxxxxxxxxx')
+            if not self.locked and (self.is_screen_locked() or self.is_remote_desktop()):
+                print('screen_locked')
+                self.locked = True
+            elif self.locked and (not self.is_screen_locked() and not self.is_remote_desktop()):
+                self.locked = False
+                print('screen_unlocked')
+                import subprocess
+                # self.cwd = os.path.split(__file__)
+                command = __file__
+                proc = subprocess.Popen(command, shell=True)
+                proc.communicate()
+
+                # self.hotkey_manager.stop()
+                # importlib.reload(keyboard)
+                # self.run()
+                # self.hotkey_manager = HotKeyManager(self)
+
+            # if self.lock_state
+
+            time.sleep(1)
 
     def handle_existing_instances(self):
         for p in psutil.process_iter():
