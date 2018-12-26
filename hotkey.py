@@ -20,8 +20,11 @@ import psutil
 import pystray
 import screeninfo
 import signal
+import subprocess
+import sys
 import threading
 import time
+import uiautomation
 import win32api
 import win32com
 import win32con
@@ -79,13 +82,29 @@ HOTKEY_PRESET = {
         'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
         'hotkeys': ['esc']
     },
+    # 'windows+up': {
+    #     'target': {'pname': 'AIMP.exe'},
+    #     'hotkeys': ['ctrl+up'],
+    # },
+    # 'windows+down': {
+    #     'target': {'pname': 'AIMP.exe'},
+    #     'hotkeys': ['ctrl+down'],
+    # },
+    # 'windows+left': {
+    #     'target': {'pname': 'AIMP.exe'},
+    #     'hotkeys': ['left'],
+    # },
+    # 'windows+right': {
+    #     'target': {'pname': 'AIMP.exe'},
+    #     'hotkeys': ['right'],
+    # },
     'windows+up': {
         'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
-        'hotkeys': ['ctrl+up'],
+        'hotkeys': ['up'],
     },
     'windows+down': {
         'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
-        'hotkeys': ['ctrl+down'],
+        'hotkeys': ['down'],
     },
     'windows+left': {
         'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
@@ -98,17 +117,17 @@ HOTKEY_PRESET = {
     'ctrl+windows+up': {
         'interval': 0.2,
         'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
-        'hotkeys': ['ctrl+up', 'ctrl+j', '6', '0', 'enter'],
+        'hotkeys': ['up', 'ctrl+j', '6', '0', 'enter'],
     },
     'ctrl+windows+down': {
         'interval': 0.2,
-        'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
-        'hotkeys': ['ctrl+down', 'ctrl+j', '6', '0', 'enter'],
+        # 'target': {'pname': 'AIMP.exe', 'title': 'TrayControl'},
+        'hotkeys': ['down', 'ctrl+j', '6', '0', 'enter'],
     },
     # 'ctrl+windows+left': {
     #     'interval': 0.2,
-    #     'hotkeys': ['ctrl+windows+left'],
-    # },
+    #     'hotkeys': ['ctrl+windows+left'], 60
+    # }, 60
     # 'ctrl+windows+right': {
     #     'interval': 0.2,
     #     'hotkeys': ['ctrl+windows+right'],
@@ -358,43 +377,11 @@ class HotKeyManager():
                         and (title is None or (title is not None and title.lower() == window.title.lower())):
                     return window
 
-    def is_screen_locked(self):
-        return win32gui.GetForegroundWindow() == 0
-
-    def is_remote_desktop(self):
-        window = self.get_foreground_window()
-        return window and window.pname == 'mstsc.exe'
-
     def handle_hotkey_thread(self):
-
-        # user32 = ctypes.windll.User32
-        # OpenDesktop = user32.OpenDesktopA
-        # SwitchDesktop = user32.SwitchDesktop
-        # DESKTOP_SWITCHDESKTOP = 0x0100
-        # hDesktop = OpenDesktop('default', 0, False, DESKTOP_SWITCHDESKTOP)
-        # # user32.LockWorkStation()
-        # time.sleep(1)
 
         while True:
             if self.stopsignal:
                 return
-            # result = SwitchDesktop(hDesktop)
-            # if self.is_screen_locked() or self.is_remote_desktop():
-            #     print('Locked')
-            # else:
-            #     print('Unlocked')
-            # event = keyboard.read_event(suppress=True)
-            # event = keyboard.read_hotkey(suppress=True)
-            # print(event)
-            # print(event)
-            # window = self.get_foreground_window()
-            # if window and window.pname == 'mstsc.exe' and self.keyboard_binded:
-            #     self.unbind_keyboard()
-            #     print('keyboard binded')
-            # if window and window.pname != 'mstsc.exe' and not self.keyboard_binded:
-            #     self.bind_keyboard()
-            #     print('keyboard unbinded')
-            # self.bind_keyboard()
             time.sleep(1)
 
     def handle_layout(self, hotkey):
@@ -410,22 +397,32 @@ class HotKeyManager():
         #         and self.eventlogs[0].time - self.eventlogs[1].time < preset['interval']:
         #     self.eventlogs.pop(0)
         #     return
-
         if 'target' in preset:
+            if not hasattr(self, 'target'):
+                self.target = uiautomation.WindowControl(searchDepth=1, ClassName='TAIMPMainForm')
+            # print(xxx.Handle)
+            # self.target.SetTopmost(True)
             origin = self.get_foreground_window()
-            target = self.get_target_window(**preset['target'])
-            if not origin or not target:
+            # target = self.get_target_window(**preset['target'])
+            if not origin or not self.target:
                 return
             # print(target.pname, target.title)
-            try:
-                win32gui.SetForegroundWindow(target.hwnd)
-            except Exception:
-                print('handle_hotkey(): focusing target failed')
-                return
-            time.sleep(0.01)
+            # try:
+            #     win32gui.SetForegroundWindow(target.hwnd)
+            # except Exception:
+            #     print('handle_hotkey(): focusing target failed', target.hwnd)
+            #     return
+            # time.sleep(0.01)
+        print(preset['hotkeys'])
+        # keyboard.send('windows', do_press=True, do_release=True)
 
         for hk in preset['hotkeys']:
+            # self.target.SendKeys('{Right}')
             if isinstance(hk, str):
+                # keys = hk.split('+')
+                # keys = ''.join(['{%s}' % (v.capitalize()) for v in keys if v])
+                # print(keys)
+                # self.target.SendKeys(keys, interval=0, waitTime=0)
                 keyboard.send(hk, do_press=True, do_release=True)
             if isinstance(hk, int) or isinstance(hk, float):
                 time.sleep(hk)
@@ -434,7 +431,7 @@ class HotKeyManager():
             try:
                 win32gui.SetForegroundWindow(origin.hwnd)
             except Exception:
-                print('handle_hotkey(): focusing origin failed')
+                print('handle_hotkey(): focusing origin failed', origin.hwnd)
                 # print(origin.hwnd, origin.pname, origin.title, origin.pid)
 
     def keyboard_hook_callback(self, event):
@@ -446,8 +443,8 @@ class HotKeyManager():
                 self.name = name
                 self.time = time.time()
 
-        modifiers = ['alt', 'ctrl', 'shift', 'windows']
-        mods = [v for v in sorted(modifiers) if keyboard.is_pressed(v)]
+        modifiers = sorted(['alt', 'ctrl', 'shift', 'windows'])
+        mods = [v for v in modifiers if keyboard.is_pressed(v)]
         mods = '+'.join(mods)
 
         if event.name is None or (not mods and event.event_type == 'up'):
@@ -466,60 +463,21 @@ class HotKeyManager():
             # self.eventlogs = self.eventlogs[:1000]
 
             keypad = 'keypad' if event.is_keypad else ''
+            keypad = ''
             hotkey = mods + '+%s' % (keypad + event.name)
             if LAYOUT_PRESET.get(hotkey):
                 self.handle_layout(hotkey)
-            if HOTKEY_PRESET.get(hotkey):
-                self.handle_hotkey(hotkey)
+            # if HOTKEY_PRESET.get(hotkey):
+            #     self.handle_hotkey(hotkey)
 
     def suppressed_hotkey_callback(self, hotkey, event):
 
-        print(hotkey.ljust(14), int(keyboard.is_pressed(hotkey)), int(
-            event.is_keypad), str(event.time).split('.')[-1][-4:])
-        print('-' * 60)
+        # print(hotkey.ljust(14), int(keyboard.is_pressed(hotkey)), int(
+        #     event.is_keypad), str(event.time).split('.')[-1][-4:])
+        # print('-' * 60)
 
         if LAYOUT_PRESET.get(hotkey):
             self.handle_layout(hotkey)
-        if HOTKEY_PRESET.get(hotkey):
-            self.handle_hotkey(hotkey)
-
-        # print(hotkey.ljust(14), int(event.is_keypad), str(event.time).split('.')[-1][-4:], keyboard.parse_hotkey(hotkey))
-        # print(event.is_keypad)
-        # print(keyboard.parse_hotkey(hotkey))4
-        # print(keyboard.parse_hotkey_combinations(hotkey))
-        # self.bind_keyboard()
-        # print('suppressed_hotkey_callback():', input_hotkey)
-        # print(keyboard.is_pressed(input_hotkey))
-        # print(keyboard.parse_hotkey(input_hotkey))
-        # print(keyboard.parse_hotkey_combinations(input_hotkey))
-        # print(sorted(keyboard.sided_modifiers))
-        # print(shortcut)
-        # class EventLog():
-
-        #     def __init__(self, name):
-        #         self.name = name
-        #         self.time = time.time()
-
-        # mods = [v for v in sorted(['alt', 'ctrl', 'shift', 'windows']) if keyboard.is_pressed(v)]
-        # mods = '+'.join(mods)
-
-        # if not mods or event.event_type == 'up' or not hasattr(self, 'eventlogs'):
-        #     # self.bind_keyboard()
-        #     self.eventlogs = []
-
-        # if event.event_type == 'down':
-
-        # self.eventlogs.insert(0, EventLog(event.name))
-        # self.eventlogs = self.eventlogs[:1000]
-        # keys = input_hotkey.split('+')
-        # modifiers = ['alt', 'ctrl', 'shift', 'windows']
-        # mods = [v for v in sorted(modifiers) if v in keys]
-        # key = [v for v in keys if v not in modifiers][0]
-        # num = 'num' if key.isdigit() else ''
-        # hotkey = '+'.join(mods + [num + key])
-        # print(input_hotkey.ljust(20), hotkey)
-        # if LAYOUT_PRESET.get(hotkey):
-        #     self.handle_layout(hotkey)
         # if HOTKEY_PRESET.get(hotkey):
         #     self.handle_hotkey(hotkey)
 
@@ -538,29 +496,15 @@ class HotKeyManager():
 
     def unbind_keyboard(self):
         keyboard.unhook_all()
-        # keyboard.unhook_all_hotkeys()
         self.keyboard_binded = False
         print('unbind_keyboard(): keyboard_unbinded')
 
     def bind_keyboard(self):
-        # importlib.reload(keyboard)
-        # self.keyboard = keyboard
-        # print(dir(keyboard))
         keyboard.unhook_all()
-        # keyboard.unhook_all_hotkeys()
-
-        # for key in [str(v) for v in range(10)]:
-        #     keyboard.add_abbreviation(key, 'keypad' + key)
-
         # keyboard.hook(self.keyboard_hook_callback)
-
-        # for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())]:
-        #     keyboard.remove_hotkey(hotkey)
-
-        # keyboard.send('alt+ctrl+shift+windows', do_press=True, do_release=True)
-        # for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())]:
-        for hotkey in [v.replace('keypad', '') for v in list(LAYOUT_PRESET.keys()) + list(HOTKEY_PRESET.keys())]:
-            # print(hotkey)
+        presets = list(LAYOUT_PRESET.keys())
+        # presets += list(HOTKEY_PRESET.keys())
+        for hotkey in [v.replace('keypad', '') for v in presets]:
             keyboard.add_hotkey(hotkey, self.suppressed_hotkey_callback, args=(hotkey,),
                                 suppress=True, timeout=1, trigger_on_release=False)
         self.keyboard_binded = True
@@ -585,10 +529,12 @@ class TrayIcon(pystray.Icon):
         self.visible = True
         self.stopsignal = False
         self.windows = []
-        self.thread = threading.Thread(target=self.watch_decktop)
-        self.thread.daemon = True
-        self.thread.start()
-
+        self.screen_lock_watcher_thread = threading.Thread(target=self.screen_lock_watcher)
+        self.screen_lock_watcher_thread.daemon = True
+        self.screen_lock_watcher_thread.start()
+        self.remote_decktop_watcher_thread = threading.Thread(target=self.remote_decktop_watcher)
+        self.remote_decktop_watcher_thread.daemon = True
+        self.remote_decktop_watcher_thread.start()
         self.run()
 
     def run(self):
@@ -602,58 +548,83 @@ class TrayIcon(pystray.Icon):
         os.kill(self.pid, signal.SIGTERM)
         super(self.__class__, self).stop()
 
-    def get_foreground_window(self):
-        hwnd = win32gui.GetForegroundWindow()
-        for window in self.windows:
-            if window.hwnd == hwnd:
-                return window
-        for i in range(10):
-            window = ForegroundWindowHandler()
-            if not window.error:
-                self.windows += [window]
-                return window
-                break
-            time.sleep(0.05)
-
     def is_screen_locked(self):
+        if not hasattr(self, '__screen_locked_log__'):
+            self.__screen_locked_log__ = []
+
+        class ScreenLockedLog():
+
+            def __init__(self):
+                self.value = win32gui.GetForegroundWindow() == 0
+                self.time = time.time()
+
+        self.__screen_locked_log__ += [ScreenLockedLog()]
+        self.__screen_locked_log__ = self.__screen_locked_log__[-100:]
+        logs = self.__screen_locked_log__[-5:]
+        return len(logs) == len([v.value for v in logs if v.value])
+
+        # if win32gui.GetForegroundWindow() == 0:
+        #     self.__screen_locked_log__ += []
+        # else:
+        #     self.__screen_locked_log__ += []
         return win32gui.GetForegroundWindow() == 0
 
-    def is_remote_desktop(self):
-        window = self.get_foreground_window()
+    def is_desktop_remoted(self):
+        window = ForegroundWindowHandler()
         return window and window.pname == 'mstsc.exe'
 
-    def watch_decktop(self):
-        self.locked = False
+    def screen_lock_watcher(self):
+        self.screen_locked_state = self.is_screen_locked()
         while not self.stopsignal:
-            # print('xxxxxxxxxxxxxxxx')
-            if not self.locked and (self.is_screen_locked() or self.is_remote_desktop()):
-                print('screen_locked')
-                self.locked = True
-            elif self.locked and (not self.is_screen_locked() and not self.is_remote_desktop()):
-                self.locked = False
-                print('screen_unlocked')
-                import subprocess
-                # self.cwd = os.path.split(__file__)
-                command = __file__
+            screen_locked = self.is_screen_locked()
+            if not self.screen_locked_state and screen_locked:
+                print('------[  SCREEN LOCKED  ]------')
+                self.screen_locked_state = True
+                # self.hotkey_manager.stop()
+                self.hotkey_manager.unbind_keyboard()
+            elif self.screen_locked_state and not screen_locked:
+                self.screen_locked_state = False
+                self.hotkey_manager.stop()
+                # self.hotkey_manager.bind_keyboard()
+                print('------[ SCREEN UNLOCKED ]------')
+                self.visible = False
+                self._update_icon()
+                python = 'pythonw.exe' if __file__.endswith('.pyw') else 'python.exe'
+                # command = '%s %s %d' % (python, __file__, self.pid)
+                command = '%s %s' % (python, __file__)
                 proc = subprocess.Popen(command, shell=True)
                 proc.communicate()
+                os.kill(self.pid, signal.SIGTERM)
+                # super(self.__class__, self).stop()
+            time.sleep(0.05)
 
-                # self.hotkey_manager.stop()
-                # importlib.reload(keyboard)
-                # self.run()
-                # self.hotkey_manager = HotKeyManager(self)
-
-            # if self.lock_state
-
-            time.sleep(1)
+    def remote_decktop_watcher(self):
+        self.desktop_remoted = self.is_screen_locked() or self.is_desktop_remoted()
+        while not self.stopsignal:
+            if not self.desktop_remoted and self.is_desktop_remoted():
+                print('------[  DESKTOP REMOTED  ]------')
+                # self.visible = False
+                # self._update_icon()
+                self.desktop_remoted = True
+                self.hotkey_manager.unbind_keyboard()
+            elif self.desktop_remoted and not self.is_desktop_remoted():
+                self.desktop_remoted = False
+                self.hotkey_manager.bind_keyboard()
+                # self.visible = True
+                # self._update_icon()
+                print('------[ DESKTOP UNREMOTED ]------')
+            time.sleep(0.05)
 
     def handle_existing_instances(self):
+        exclude_pids = [self.pid]
+        exclude_pids += [int(v) for v in sys.argv[1:] if v.isdigit()]
         for p in psutil.process_iter():
             try:
                 p.cwd()
             except Exception:
                 continue
-            if p.pid != self.pid and p.cwd() == self.cwd and p.name() in ('python.exe', 'pythonw.exe',):
+            if p.pid not in exclude_pids and p.cwd() == self.cwd \
+                    and p.name().lower() in ('python.exe', 'pythonw.exe',):
                 p.terminate()
 
 

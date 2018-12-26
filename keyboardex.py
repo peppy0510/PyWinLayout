@@ -116,8 +116,8 @@ def add_hotkey(hotkey, callback, args=(), suppress=False, timeout=1, trigger_on_
             # print(str(int(is_pressed(keys[-1]))).rjust(16), int(e.is_keypad), str(e.time).split('.')[-1][-4:])
             if is_pressed(hotkey) and (
                     (hasdigit and e.is_keypad)
-                    # or (hasdigit and not e.is_keypad)
                     or (hasarrow and not e.is_keypad)
+                    or (not hasdigit and not hasarrow)
             ):
                 return (event_type == KEY_DOWN and e.event_type == KEY_UP and e.scan_code in _logically_pressed_keys) or (
                     event_type == e.event_type and callback(*args, event=e))

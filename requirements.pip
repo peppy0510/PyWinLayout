@@ -1,6 +1,7 @@
 wmi
 mido
-pyautogui
 keyboard
+pyautogui
+uiautomation
 python-rtmidi
 screeninfo
