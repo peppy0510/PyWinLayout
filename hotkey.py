@@ -563,12 +563,6 @@ class TrayIcon(pystray.Icon):
         logs = self.__screen_locked_log__[-5:]
         return len(logs) == len([v.value for v in logs if v.value])
 
-        # if win32gui.GetForegroundWindow() == 0:
-        #     self.__screen_locked_log__ += []
-        # else:
-        #     self.__screen_locked_log__ += []
-        return win32gui.GetForegroundWindow() == 0
-
     def is_desktop_remoted(self):
         window = ForegroundWindowHandler()
         return window and window.pname == 'mstsc.exe'
@@ -596,7 +590,7 @@ class TrayIcon(pystray.Icon):
                 proc.communicate()
                 os.kill(self.pid, signal.SIGTERM)
                 # super(self.__class__, self).stop()
-            time.sleep(0.05)
+            time.sleep(0.1)
 
     def remote_decktop_watcher(self):
         self.desktop_remoted = self.is_screen_locked() or self.is_desktop_remoted()
