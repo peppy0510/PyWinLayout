@@ -14,6 +14,7 @@ import atexit
 import ctypes
 import importlib
 import keyboardex as keyboard
+import mido
 import operator
 import os
 import psutil
@@ -158,6 +159,24 @@ HOTKEY_PRESET = {
     # },
 }
 
+MIDIKEY_PRESET = {
+    'note+41': {
+        'hotkeys': ['ctrl+alt+shift+f1']
+    },
+    'note+43': {
+        'hotkeys': ['ctrl+alt+shift+f2']
+    },
+    'note+45': {
+        'hotkeys': ['ctrl+alt+shift+f3']
+    },
+    'note+47': {
+        'hotkeys': ['ctrl+alt+shift+f4']
+    },
+    'note+72': {
+        'hotkeys': ['ctrl+alt+shift+f12']
+    }
+}
+
 
 def sort_preset_hotkey(preset):
     modifiers = sorted(['alt', 'ctrl', 'shift', 'windows'])
@@ -172,13 +191,6 @@ def sort_preset_hotkey(preset):
 
 LAYOUT_PRESET = sort_preset_hotkey(LAYOUT_PRESET)
 HOTKEY_PRESET = sort_preset_hotkey(HOTKEY_PRESET)
-
-
-class RepeatHandler():
-
-    def __init__(self, hotkey):
-        self.hotkey = hotkey
-        self.timestamp = time.time()
 
 
 class Coordination():
@@ -207,6 +219,83 @@ class Rectangle():
         if self.width > self.height:
             return 'landscape'
         return 'portrait'
+
+
+class RepeatHandler():
+
+    def __init__(self, hotkeys):
+        self.hotkeys = hotkeys
+        self.timestamp = time.time()
+
+
+class MidiToKey():
+
+    def __init__(self, parent=None):
+        self.repeats = []
+        self.parent = parent
+        self.stopsignal = False
+
+    def repeat_timer(self):
+        while not self.stopsignal:
+            time.sleep(0.001)
+            timestamp = time.time()
+            for repeat in self.repeats:
+                if timestamp < repeat.timestamp + 0.5:
+                    continue
+                # pyautogui.hotkey(*repeat.hotkey)
+                self.handle_hotkeys(repeat.hotkeys)
+
+    def insert_repeat(self, hotkeys):
+        self.repeats += [RepeatHandler(hotkeys)]
+
+    def remove_repeat(self, hotkeys):
+        for i in range(len(self.repeats) - 1, -1, -1):
+            if self.repeats[i].hotkeys == hotkeys:
+                self.repeats.pop(i)
+
+    def handle_hotkeys(self, hotkeys):
+        for hotkey in hotkeys:
+            if isinstance(hotkey, str):
+                keyboard.send(hotkey, do_press=True, do_release=True)
+            if isinstance(hotkey, int) or isinstance(hotkey, float):
+                time.sleep(hotkey)
+
+    def handle_notes(self, message, notes, hotkeys):
+        if message.note in notes:
+            if message.type == 'note_on':
+                # pyautogui.hotkey(*hotkey)
+                self.handle_hotkeys(hotkeys)
+                self.insert_repeat(hotkeys)
+            if message.type == 'note_off':
+                self.remove_repeat(hotkeys)
+
+    def midi_frame(self, message):
+        if message.type == 'aftertouch':
+            return
+        print(message)
+        if message.type.startswith('note'):
+            preset = MIDIKEY_PRESET.get('+'.join(['note', str(message.note)]))
+            if preset:
+                self.handle_notes(message, (message.note,), preset['hotkeys'])
+
+    def midi_watcher(self):
+        with mido.open_input() as inport:
+            for message in inport:
+                if self.stopsignal:
+                    return
+                self.midi_frame(message)
+
+    def run(self):
+        self.repeat_timer_thread = threading.Thread(target=self.repeat_timer)
+        self.repeat_timer_thread.daemon = True
+        self.repeat_timer_thread.start()
+
+        self.midi_watcher_thread = threading.Thread(target=self.midi_watcher)
+        self.midi_watcher_thread.daemon = True
+        self.midi_watcher_thread.start()
+
+    def stop(self):
+        self.stopsignal = True
 
 
 class WindowInformation():
@@ -484,9 +573,12 @@ class HotKeyManager():
     def stop(self, event=None):
         # self.thread.stop()
         self.unbind_keyboard()
+        self.miditokey.stop()
         self.stopsignal = True
 
     def run(self, event=None):
+        self.miditokey = MidiToKey(self)
+        self.miditokey.run()
         self.bind_keyboard()
         self.thread = threading.Thread(target=self.handle_hotkey_thread)
         self.thread.daemon = True
@@ -555,12 +647,16 @@ class TrayIcon(pystray.Icon):
         class ScreenLockedLog():
 
             def __init__(self):
-                self.value = win32gui.GetForegroundWindow() == 0
                 self.time = time.time()
+                hwnd = win32gui.GetForegroundWindow()
+                self.value = hwnd == 0
+                if hwnd != 0:
+                    window = WindowInformation(hwnd)
+                    self.value = not window.pname and window.title == '작업 관리자'
 
         self.__screen_locked_log__ += [ScreenLockedLog()]
         self.__screen_locked_log__ = self.__screen_locked_log__[-100:]
-        logs = self.__screen_locked_log__[-5:]
+        logs = self.__screen_locked_log__[-3:]
         return len(logs) == len([v.value for v in logs if v.value])
 
     def is_desktop_remoted(self):
