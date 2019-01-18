@@ -573,12 +573,12 @@ class HotKeyManager():
     def stop(self, event=None):
         # self.thread.stop()
         self.unbind_keyboard()
-        self.miditokey.stop()
+        # self.miditokey.stop()
         self.stopsignal = True
 
     def run(self, event=None):
-        self.miditokey = MidiToKey(self)
-        self.miditokey.run()
+        # self.miditokey = MidiToKey(self)
+        # self.miditokey.run()
         self.bind_keyboard()
         self.thread = threading.Thread(target=self.handle_hotkey_thread)
         self.thread.daemon = True
