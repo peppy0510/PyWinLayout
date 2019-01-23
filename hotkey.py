@@ -14,6 +14,7 @@ import wx.adv
 
 from base import OtherInstanceWatcher
 from base import WindowLayoutManager
+from base import kill_existing_instances
 from base import run_as_admin
 from presets import LAYOUT_PRESETS
 
@@ -58,7 +59,7 @@ class MainFrame(wx.Frame):
         wx.Frame.__init__(self, parent, id=wx.ID_ANY, size=wx.Size(0, 0))
         self.taskbar = TaskBarIcon(self)
         self.window_layout_manager = WindowLayoutManager()
-        self.other_instance_watcher = OtherInstanceWatcher(self)
+        # self.other_instance_watcher = OtherInstanceWatcher(self)
         # self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.bind_hotkey()
 
@@ -79,7 +80,7 @@ class MainFrame(wx.Frame):
 
     def OnClose(self, event=None):
         self.unbind_hotkey()
-        self.other_instance_watcher.Stop()
+        # self.other_instance_watcher.Stop()
         wx.CallAfter(self.taskbar.Destroy)
         wx.CallAfter(self.Destroy)
         print('OnClose')
@@ -109,5 +110,6 @@ def main():
 
 
 if __name__ == '__main__':
+    kill_existing_instances()
     main()
     # run_as_admin(main, __file__)

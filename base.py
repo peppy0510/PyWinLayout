@@ -30,7 +30,7 @@ def is_admin():
         return False
 
 
-def kill_existing_instances(self):
+def kill_existing_instances():
     pid = int(os.getpid())
     cwd = os.path.split(__file__)[0]
     for p in psutil.process_iter():
@@ -52,7 +52,7 @@ def run_as_admin(callback, file, try_run_as_admin=True):
         ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable, file, None, 1)
 
 
-def create_shortcut(path, target_path='', working_directory='', icon=''):
+def create_shortcut(path, target_path='', arguments='', working_directory='', icon=''):
     ext = os.path.splitext(path)[-1][1:].lower()
     if ext == 'url':
         with open(path, 'w') as file:
@@ -63,13 +63,20 @@ def create_shortcut(path, target_path='', working_directory='', icon=''):
         shortcut = shell.CreateShortCut(
             path if path.endswith('.lnk') else '.'.join([path, 'lnk']))
         # shortcut.WindowStyle = 1
-        # shortcut.Arguments = 'C:\myFile.txt'
+        shortcut.Arguments = arguments
         shortcut.Targetpath = target_path
         shortcut.WorkingDirectory = working_directory
         if icon:
             shortcut.IconLocation = icon
         shortcut.save()
     print('[ SHORTCUT CREATED ] [ %s ]' % path)
+
+
+def create_desktop_ini(directory, icon_resource, folder_type='Generic'):
+    with open(os.path.join(directory, 'desktop.ini'), 'w') as file:
+        file.write('\n'.join([
+            '[.ShellClassInfo]', 'IconResource=%s,0' % icon_resource,
+            '[ViewState]', 'Mode=', 'Vid=', 'FolderType=%s' % folder_type]))
 
 
 class Coordination():

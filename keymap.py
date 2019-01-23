@@ -10,6 +10,9 @@ email: peppy0510@hotmail.com
 import win32con
 
 
+# https://github.com/nvaccess/nvda-misc-deps/blob/master/python/win32con.py
+
+
 KEYMAP = {
     '0': 0x30,
     '1': 0x31,
