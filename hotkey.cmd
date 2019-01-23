@@ -1,1 +1,1 @@
-start /min pythonw hotkey.pyw
+start /min pythonw hotkey.py
