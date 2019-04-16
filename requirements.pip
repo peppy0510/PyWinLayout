@@ -3,7 +3,6 @@ wmi
 mido
 winshell
 keyboard
-pyautogui
-uiautomation
-python-rtmidi
 screeninfo
+cryptography
+python-rtmidi

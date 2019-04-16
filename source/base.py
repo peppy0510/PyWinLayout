@@ -18,9 +18,16 @@ import win32api
 import win32con
 import win32gui
 import win32process
-import wx
+import winreg
 
 from win32com.client import Dispatch
+
+
+CMD = r'C:\\Windows\\System32\\cmd.exe'
+FOD_HELPER = r'C:\\Windows\\System32\\fodhelper.exe'
+PYTHON_CMD = 'python'
+REG_PATH = r'Software\Classes\ms-settings\shell\open\command'
+DELEGATE_EXEC_REG_KEY = 'DelegateExecute'
 
 
 def is_admin():
@@ -30,26 +37,84 @@ def is_admin():
         return False
 
 
-def kill_existing_instances():
-    pid = int(os.getpid())
-    cwd = os.path.split(__file__)[0]
-    for p in psutil.process_iter():
-        try:
-            p.cwd()
-        except Exception:
-            continue
-        if p.pid != pid and p.cwd() == cwd and p.name().lower() in ('python.exe', 'pythonw.exe',):
-            # only SIGTERM, CTRL_C_EVENT, CTRL_BREAK_EVENT signals on Windows Platform.
-            # p.send_signal(signal.SIGTERM)
-            p.terminate()
+def create_reg_key(key, value):
+    '''
+    Creates a reg key
+    '''
+    try:
+        winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
+        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_WRITE)
+        winreg.SetValueEx(registry_key, key, 0, winreg.REG_SZ, value)
+        winreg.CloseKey(registry_key)
+    except WindowsError:
+        raise
+
+
+def bypass_uac(cmd):
+    '''
+    Tries to bypass the UAC
+    '''
+    try:
+        create_reg_key(DELEGATE_EXEC_REG_KEY, '')
+        create_reg_key(None, cmd)
+    except WindowsError:
+        raise
 
 
 def run_as_admin(callback, file, try_run_as_admin=True):
     if try_run_as_admin is False or is_admin():
         callback()
     else:
+        print(sys.executable)
+        create_reg_key(DELEGATE_EXEC_REG_KEY, '')
+
+        # cwd = os.path.dirname(os.path.realpath(file))
+        # command = '{} /k {} {}'.format(sys.executable, file, cwd)
+        # command = '{} /k {}'.format(sys.executable, file)
+        # create_reg_key(None, command)
+        # create_reg_key(None, cmd)
         # Rerun with admin rights
+        # try:
+        #     current_dir = os.path.dirname(os.path.realpath(__file__)) + '\\' + __file__
+        #     cmd = '{} /k {} {}'.format(CMD, PYTHON_CMD, current_dir)
+        #     bypass_uac(cmd)
+        #     os.system(FOD_HELPER)
+        #     sys.exit(0)
+        # except WindowsError:
+        #     sys.exit(1)
+
         ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable, file, None, 1)
+
+
+def get_self_process_name():
+    pid = int(os.getpid())
+    for p in psutil.process_iter():
+        try:
+            p.name()
+        except Exception:
+            pass
+        if p.pid == pid:
+            return p.name()
+
+
+def kill_existing_instances():
+    pid = int(os.getpid())
+    pname = get_self_process_name()
+    cwd = os.path.split(__file__)[0]
+    for p in psutil.process_iter():
+        try:
+            p.cwd()
+            p.name()
+        except Exception:
+            continue
+        if p.pid == pid:
+            continue
+        if p.cwd() == cwd and p.name().lower() in ('python.exe', 'pythonw.exe',):
+            # only SIGTERM, CTRL_C_EVENT, CTRL_BREAK_EVENT signals on Windows Platform.
+            # p.send_signal(signal.SIGTERM)
+            p.terminate()
+        if pname.endswith('.exe') and pname == p.name():
+            p.terminate()
 
 
 def create_shortcut(path, target_path='', arguments='', working_directory='', icon=''):
@@ -161,17 +226,17 @@ class WindowLayoutHandler(WindowInformation, Rectangle):
             monitor_info = win32api.GetMonitorInfo(
                 win32api.MonitorFromPoint((screen.offset.x, screen.offset.y)))
 
-            mx, my, mw, mh = monitor_info.get('Monitor')
-            wx, wy, ww, wh = monitor_info.get('Work')
+            monx, mony, monw, monh = monitor_info.get('Monitor')
+            workx, worky, workw, workh = monitor_info.get('Work')
 
-            if mw == ww and wy != my:  # taskbar top
-                screen.offset.y += wy - my
-            if mw == ww and wy == my:  # taskbar bottom
-                screen.finish.y -= mh - wh
-            if mh == wh and wx != mx:  # taskbar left
-                screen.offset.x += wx - mx
-            if mh == wh and wx == mx:  # taskbar right
-                screen.finish.x -= mw - ww
+            if monw == workw and worky != mony:  # taskbar top
+                screen.offset.y += worky - mony
+            if monw == workw and worky == mony:  # taskbar bottom
+                screen.finish.y -= monh - workh
+            if monh == workh and workx != monx:  # taskbar left
+                screen.offset.x += workx - monx
+            if monh == workh and workx == monx:  # taskbar right
+                screen.finish.x -= monw - workw
 
         return screens
 
@@ -270,39 +335,3 @@ class WindowLayoutManager():
                 self.__proxy_window_layout_handlers__ += [window]
                 return window
             time.sleep(0.05)
-
-
-class OtherInstanceWatcher(wx.Timer):
-
-    def __init__(self, parent):
-        super(wx.Timer, self).__init__()
-        self.tic = time.time()
-        self.parent = parent
-        self.interval = 1000
-        self.pid = int(os.getpid())
-        self.cwd = os.path.split(__file__)[0]
-        self.checked_pids = []
-        self.Start(self.interval)
-
-    def Notify(self):
-        uptime = time.time() - self.tic
-        if uptime < 2:
-            return
-        for pid in psutil.pids():
-            if pid in self.checked_pids:
-                continue
-            if pid == self.pid:
-                self.checked_pids += [pid]
-                continue
-
-            try:
-                p = psutil.Process(pid)
-                if p.cwd() != self.cwd or p.name().lower() not in ('python.exe', 'pythonw.exe',):
-                    self.checked_pids += [pid]
-                    continue
-            except Exception:
-                self.checked_pids += [pid]
-                continue
-
-            self.Stop()
-            self.parent.OnClose()

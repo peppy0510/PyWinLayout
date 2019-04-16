@@ -1,7 +1,8 @@
 # encoding: utf-8
 
 
-__version__ = '0.0.1'
+__appname__ = 'PyWinLayout'
+__version__ = '0.0.2'
 __author__ = 'Taehong Kim'
 __email__ = 'peppy0510@hotmail.com'
 __license__ = ''
@@ -9,11 +10,13 @@ __doc__ = '''
 '''
 
 
+import os
+import sys
 import wx
 import wx.adv
 
-from base import OtherInstanceWatcher
 from base import WindowLayoutManager
+from base import create_shortcut
 from base import kill_existing_instances
 from base import run_as_admin
 from presets import LAYOUT_PRESETS
@@ -21,25 +24,40 @@ from presets import LAYOUT_PRESETS
 
 class TaskBarIcon(wx.adv.TaskBarIcon):
 
-    TRAY_TOOLTIP = 'HOTKEY %s' % __version__
-    TRAY_ICON = 'assets\\icon.ico'
+    tray_tooltip = '{} {}'.format(__appname__, __version__,)
+    tray_icon_path = 'assets\\icon\\icon.ico'
+    if not os.path.exists(tray_icon_path):
+        tray_icon_path = '..\\assets\\icon\\icon.ico'
 
     def __init__(self, parent):
         super(TaskBarIcon, self).__init__()
         self.parent = parent
-        self.set_icon(self.TRAY_ICON)
+        startmenu = os.path.join(os.path.expanduser('~'), 'AppData',
+                                 'Roaming', 'Microsoft', 'Windows', 'Start Menu')
+        startup = os.path.join(startmenu, 'Programs', 'Startup')
+        self.run_on_startup_path = os.path.join(startup, __appname__)
+
+        self.set_icon(self.tray_icon_path)
 
     def CreatePopupMenu(self):
         self.menu = wx.Menu()
-        self.menu.SetTitle('HOTKEY %s' % __version__)
-        self.create_menu_item('Author: %s' % __author__)
-        self.create_menu_item('Email: %s' % __email__)
+        self.menu.SetTitle('{} {}'.format(__appname__, __version__,))
+        self.run_on_startup = self.create_menu_item(
+            'Run on Startup', self.parent.OnToggleRunOnStartup)
         self.menu.AppendSeparator()
-        self.create_menu_item('Quit HOTKEY', self.parent.OnClose)
+        self.create_menu_item('Author: {}'.format(__author__))
+        self.create_menu_item('Email: {}'.format(__email__))
+        self.menu.AppendSeparator()
+        self.create_menu_item('Quit {}'.format(__appname__), self.parent.OnClose)
+
+        path = self.run_on_startup_path
+        if os.path.exists('{}.lnk'.format(path)):
+            self.run_on_startup.Check(True)
+
         return self.menu
 
     def create_menu_item(self, label, func=None):
-        item = wx.MenuItem(self.menu, -1, label)
+        item = wx.MenuItem(self.menu, -1, label, kind=wx.ITEM_CHECK)
         self.menu.Bind(wx.EVT_MENU, func, id=item.GetId())
         self.menu.Append(item)
         return item
@@ -49,7 +67,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             icon = wx.Icon(path)
         else:
             icon = wx.Icon(wx.Bitmap(path))
-        self.SetIcon(icon, self.TRAY_TOOLTIP)
+        self.SetIcon(icon, self.tray_tooltip)
 
 
 class MainFrame(wx.Frame):
@@ -57,6 +75,7 @@ class MainFrame(wx.Frame):
     def __init__(self, parent=None):
 
         wx.Frame.__init__(self, parent, id=wx.ID_ANY, size=wx.Size(0, 0))
+
         self.taskbar = TaskBarIcon(self)
         self.window_layout_manager = WindowLayoutManager()
         # self.other_instance_watcher = OtherInstanceWatcher(self)
@@ -77,6 +96,32 @@ class MainFrame(wx.Frame):
         for preset in LAYOUT_PRESETS:
             if preset['event_id'] == event.GetId():
                 self.window_layout_manager.resize_foreground_window(preset)
+
+    def OnToggleRunOnStartup(self, event):
+        path = self.taskbar.run_on_startup_path
+        if os.path.exists('{}.lnk'.format(path)):
+            os.remove('{}.lnk'.format(path))
+        else:
+            if hasattr(sys, '_MEIPASS'):
+                working_directory = 'C:\\Program Files\\{}'.format(__appname__)
+                if not os.path.exists(working_directory):
+                    working_directory = 'C:\\Program Files (x86)\\{}'.format(__appname__)
+                target_path = os.path.join(working_directory, '{}.exe'.format(__appname__))
+                arguments = ''
+                icon = ''
+            else:
+                working_directory = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+                target_path = 'pythonw.exe'
+                arguments = '"{}"'.format(os.path.join(
+                    working_directory, 'source', os.path.basename(__file__)))
+                icon = os.path.join(working_directory, self.taskbar.tray_icon_path.strip('.\\'))
+
+            create_shortcut(
+                path=path,
+                target_path=target_path,
+                arguments=arguments,
+                working_directory=working_directory,
+                icon=icon)
 
     def OnClose(self, event=None):
         self.unbind_hotkey()
