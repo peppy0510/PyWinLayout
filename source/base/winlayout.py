@@ -7,141 +7,14 @@ email: peppy0510@hotmail.com
 '''
 
 
-import ctypes
 import operator
 import os
-import psutil
 import screeninfo
-import sys
 import time
 import win32api
 import win32con
 import win32gui
 import win32process
-import winreg
-
-from win32com.client import Dispatch
-
-
-CMD = r'C:\\Windows\\System32\\cmd.exe'
-FOD_HELPER = r'C:\\Windows\\System32\\fodhelper.exe'
-PYTHON_CMD = 'python'
-REG_PATH = r'Software\Classes\ms-settings\shell\open\command'
-DELEGATE_EXEC_REG_KEY = 'DelegateExecute'
-
-
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except Exception:
-        return False
-
-
-def create_reg_key(key, value):
-    '''
-    Creates a reg key
-    '''
-    try:
-        winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH)
-        registry_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_WRITE)
-        winreg.SetValueEx(registry_key, key, 0, winreg.REG_SZ, value)
-        winreg.CloseKey(registry_key)
-    except WindowsError:
-        raise
-
-
-def bypass_uac(cmd):
-    '''
-    Tries to bypass the UAC
-    '''
-    try:
-        create_reg_key(DELEGATE_EXEC_REG_KEY, '')
-        create_reg_key(None, cmd)
-    except WindowsError:
-        raise
-
-
-def run_as_admin(callback, file, try_run_as_admin=True):
-    if try_run_as_admin is False or is_admin():
-        callback()
-    else:
-        print(sys.executable)
-        create_reg_key(DELEGATE_EXEC_REG_KEY, '')
-
-        # cwd = os.path.dirname(os.path.realpath(file))
-        # command = '{} /k {} {}'.format(sys.executable, file, cwd)
-        # command = '{} /k {}'.format(sys.executable, file)
-        # create_reg_key(None, command)
-        # create_reg_key(None, cmd)
-        # Rerun with admin rights
-        # try:
-        #     current_dir = os.path.dirname(os.path.realpath(__file__)) + '\\' + __file__
-        #     cmd = '{} /k {} {}'.format(CMD, PYTHON_CMD, current_dir)
-        #     bypass_uac(cmd)
-        #     os.system(FOD_HELPER)
-        #     sys.exit(0)
-        # except WindowsError:
-        #     sys.exit(1)
-
-        ctypes.windll.shell32.ShellExecuteW(None, 'runas', sys.executable, file, None, 1)
-
-
-def get_self_process_name():
-    pid = int(os.getpid())
-    for p in psutil.process_iter():
-        try:
-            p.name()
-        except Exception:
-            pass
-        if p.pid == pid:
-            return p.name()
-
-
-def kill_existing_instances():
-    pid = int(os.getpid())
-    pname = get_self_process_name()
-    cwd = os.path.split(__file__)[0]
-    for p in psutil.process_iter():
-        try:
-            p.cwd()
-            p.name()
-        except Exception:
-            continue
-        if p.pid == pid:
-            continue
-        if p.cwd() == cwd and p.name().lower() in ('python.exe', 'pythonw.exe',):
-            # only SIGTERM, CTRL_C_EVENT, CTRL_BREAK_EVENT signals on Windows Platform.
-            # p.send_signal(signal.SIGTERM)
-            p.terminate()
-        if pname.endswith('.exe') and pname == p.name():
-            p.terminate()
-
-
-def create_shortcut(path, target_path='', arguments='', working_directory='', icon=''):
-    ext = os.path.splitext(path)[-1][1:].lower()
-    if ext == 'url':
-        with open(path, 'w') as file:
-            file.write('[InternetShortcut]\nURL=%s' % target_path)
-    else:
-        shell = Dispatch('WScript.Shell')
-
-        shortcut = shell.CreateShortCut(
-            path if path.endswith('.lnk') else '.'.join([path, 'lnk']))
-        # shortcut.WindowStyle = 1
-        shortcut.Arguments = arguments
-        shortcut.Targetpath = target_path
-        shortcut.WorkingDirectory = working_directory
-        if icon:
-            shortcut.IconLocation = icon
-        shortcut.save()
-    print('[ SHORTCUT CREATED ] [ %s ]' % path)
-
-
-def create_desktop_ini(directory, icon_resource, folder_type='Generic'):
-    with open(os.path.join(directory, 'desktop.ini'), 'w') as file:
-        file.write('\n'.join([
-            '[.ShellClassInfo]', 'IconResource=%s,0' % icon_resource,
-            '[ViewState]', 'Mode=', 'Vid=', 'FolderType=%s' % folder_type]))
 
 
 class Coordination():

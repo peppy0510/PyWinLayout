@@ -1,8 +1,9 @@
-wx
 wmi
 mido
 winshell
+wxpython
 keyboard
 screeninfo
 cryptography
 python-rtmidi
+pyinstaller

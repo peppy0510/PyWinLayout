@@ -5,14 +5,14 @@
 
 [Setup]
 AppName=PyWinLayout
-AppVerName=PyWinLayout 0.0.2
+AppVerName=PyWinLayout 0.0.3
 DefaultDirName={pf}\PyWinLayout
 DefaultGroupName=PyWinLayout
 UninstallDisplayIcon={app}\PyWinLayout.exe
 Compression=lzma2
 SolidCompression=yes
 OutputDir="dist"
-OutputBaseFilename=PyWinLayout 0.0.2
+OutputBaseFilename=PyWinLayout 0.0.3
 
 // SignTool=Standard $f
 

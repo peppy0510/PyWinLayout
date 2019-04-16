@@ -56,22 +56,38 @@ def grapdatas(home, path, depth, mode, specs=None):
 # runtime_tmpdir = '%HOMEPATH%\\AppData\\Local\\Temp\\' + name
 
 
+def find_api_ms_win_crt_path(architecture='amd64'):
+    # 'x86' or 'amd64'
+    existing_dirs = []
+    basedir = os.path.join('C:\\Windows\\WinSxS')
+    for dirname in os.listdir(basedir):
+        if not dirname.startswith(architecture):
+            continue
+        absdir = os.path.join(basedir, dirname)
+        if not os.path.isdir(absdir):
+            continue
+
+        for name in os.listdir(absdir):
+            if 'api-ms-win-crt-' in name:
+                existing_dirs += [absdir]
+
+    return list(set(existing_dirs))[0]
+
+
 path = Path(
     home='',
+    base=os.path.join('source', 'base'),
     assets='assets',
     icon=os.path.join('assets', 'icon', 'icon.ico'),
     dlls=os.path.join('assets', 'dlls'),
     output=os.path.join('build', '{}.exe'.format(appname)),
-    winsxs86=('C:\\Windows\\WinSxS\\x86_microsoft-windows-m..'
-              'namespace-downlevel_31bf3856ad364e35_10.0.17763.1_none_5c0c291220e648a1'),
-    winsxs64=('C:\\Windows\\WinSxS\\amd64_microsoft-windows-m..'
-              'namespace-downlevel_31bf3856ad364e35_10.0.17763.1_none_b82ac495d943b9d7')
+    winsxs=find_api_ms_win_crt_path()
 )
 
 a = Analysis([os.path.join('source', 'main.py')],
-             hookspath=[path.home, path.assets],
-             pathex=[path.home, path.assets, path.dlls, path.winsxs64],
-             hiddenimports=[])
+             hookspath=[path.home, path.base, path.assets],
+             pathex=[path.home, path.assets, path.dlls, path.winsxs],
+             hiddenimports=['base'])
 
 a.datas += grapdatas(path.home, 'assets', 1, 'data', ['icon.ico'])
 

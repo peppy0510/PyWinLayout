@@ -9,7 +9,7 @@ email: peppy0510@hotmail.com
 
 import hashlib
 
-from keymap import KEYMAP
+from base.keymap import KEYMAP
 
 
 LAYOUT_PRESETS = [

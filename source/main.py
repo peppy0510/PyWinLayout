@@ -2,7 +2,7 @@
 
 
 __appname__ = 'PyWinLayout'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __author__ = 'Taehong Kim'
 __email__ = 'peppy0510@hotmail.com'
 __license__ = ''
@@ -15,8 +15,8 @@ import sys
 import wx
 import wx.adv
 
+from base import ShortCut
 from base import WindowLayoutManager
-from base import create_shortcut
 from base import kill_existing_instances
 from base import run_as_admin
 from presets import LAYOUT_PRESETS
@@ -25,17 +25,17 @@ from presets import LAYOUT_PRESETS
 class TaskBarIcon(wx.adv.TaskBarIcon):
 
     tray_tooltip = '{} {}'.format(__appname__, __version__,)
-    tray_icon_path = 'assets\\icon\\icon.ico'
+    tray_icon_path = os.path.join('assets', 'icon', 'icon.ico')
     if not os.path.exists(tray_icon_path):
-        tray_icon_path = '..\\assets\\icon\\icon.ico'
+        tray_icon_path = os.path.join('..', tray_icon_path)
 
     def __init__(self, parent):
         super(TaskBarIcon, self).__init__()
         self.parent = parent
-        startmenu = os.path.join(os.path.expanduser('~'), 'AppData',
-                                 'Roaming', 'Microsoft', 'Windows', 'Start Menu')
-        startup = os.path.join(startmenu, 'Programs', 'Startup')
-        self.run_on_startup_path = os.path.join(startup, __appname__)
+        # startmenu = os.path.join(os.path.expanduser('~'), 'AppData',
+        #                          'Roaming', 'Microsoft', 'Windows', 'Start Menu')
+        # startup = os.path.join(startmenu, 'Programs', 'Startup')
+        # self.run_on_startup_path = os.path.join(startup, __appname__)
 
         self.set_icon(self.tray_icon_path)
 
@@ -50,8 +50,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.menu.AppendSeparator()
         self.create_menu_item('Quit {}'.format(__appname__), self.parent.OnClose)
 
-        path = self.run_on_startup_path
-        if os.path.exists('{}.lnk'.format(path)):
+        if ShortCut.has_user_startup(__appname__):
             self.run_on_startup.Check(True)
 
         return self.menu
@@ -98,9 +97,9 @@ class MainFrame(wx.Frame):
                 self.window_layout_manager.resize_foreground_window(preset)
 
     def OnToggleRunOnStartup(self, event):
-        path = self.taskbar.run_on_startup_path
-        if os.path.exists('{}.lnk'.format(path)):
-            os.remove('{}.lnk'.format(path))
+        path = ShortCut.get_user_startup_path(__appname__)
+        if os.path.exists(path):
+            os.remove(path)
         else:
             if hasattr(sys, '_MEIPASS'):
                 working_directory = 'C:\\Program Files\\{}'.format(__appname__)
@@ -116,7 +115,7 @@ class MainFrame(wx.Frame):
                     working_directory, 'source', os.path.basename(__file__)))
                 icon = os.path.join(working_directory, self.taskbar.tray_icon_path.strip('.\\'))
 
-            create_shortcut(
+            ShortCut.create(
                 path=path,
                 target_path=target_path,
                 arguments=arguments,

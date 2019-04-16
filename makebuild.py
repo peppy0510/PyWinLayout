@@ -58,13 +58,8 @@ class Build():
 
     @classmethod
     def make_build(self):
-        # proc = subprocess.Popen('pyinstaller --uac-admin makebuild.spec', shell=True)
         proc = subprocess.Popen('pyinstaller makebuild.spec', shell=True)
         proc.communicate()
-        os.mkdir(os.path.join('dist', 'assets'))
-        os.mkdir(os.path.join('dist', 'assets', 'icon'))
-        shutil.copyfile(os.path.join('assets', 'icon', 'icon.ico'),
-                        os.path.join('dist', 'assets', 'icon', 'icon.ico'))
 
     @classmethod
     def get_appname(self):
@@ -75,13 +70,6 @@ class Build():
             m = re.search(ptrn, content)
             if m:
                 return m.group(1)
-
-    # @classmethod
-    # def set_appname(self):
-    #     ptrn = r'''(AppName=|)'''
-    #     version = self.get_version()
-    #     if version:
-    #         self.subfile(ptrn, version, 'makeinstaller.iss')
 
     @classmethod
     def get_version(self):
