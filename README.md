@@ -20,7 +20,7 @@
 ## How to use
 
 * Once you execute, then tray icon will show up.
-* Below table shows build-in hotkeys preset.
+* Below table shows built-in hotkeys preset.
 
 | `NumLock is Turned On` |                    |                         |
 |:----------------------:|:------------------:|:-----------------------:|
