@@ -6,16 +6,16 @@
 
 ## How to install
 
-* Just download the latest installation release file.
+* Just download and install the latest release file.
 * Alternatively, if you like to build your own, download a copy or download a repository then execute makebuild.py. Python 3.x, Python packages in the requirements.pip file, and Inno Setup is required.
 
 ## Features
 
-* Runs at the windows desktop tray.
+* Runs in the Windows desktop tray.
 * Support multi-monitor desktop environment.
 * Two types of built-in layout presets which response to the aspect ratio of the screen pivotting.
 * You can enable and disable "Run on Windows startup" from the tray icon menu.
-* 2-step layout calculation for minimum or maximum size limit applications like music player.
+* 2-step layout calculation for minimum or maximum size limit applications such as music player.
 
 ## How to use
 
