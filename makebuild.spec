@@ -9,7 +9,6 @@ email: peppy0510@hotmail.com
 
 import glob
 import os
-import re
 
 
 debug = False
@@ -23,17 +22,8 @@ COLLECT = COLLECT  # noqa
 Analysis = Analysis  # noqa
 
 
-def get_appname():
-    ptrn = (r'''[_]{0,2}appname[_]{0,2}[\s]{1,}[=]{1}[\s]{1,}'''
-            r'''['"]{1}([a-zA-Z\s]{1,})['"]{1}''')
-    with open(os.path.join('source', 'main.py'), 'r') as file:
-        content = file.read()
-        m = re.search(ptrn, content)
-        if m:
-            return m.group(1)
-
-
-appname = get_appname()
+__appname__ = 'PyWinLayout'
+__api_ms_win_crt_path__ = 'C:\\Windows\\WinSxS\\amd64_microsoft-windows-m..namespace-downlevel_31bf3856ad364e35_10.0.17763.1_none_b82ac495d943b9d7'
 
 
 class Path():
@@ -56,32 +46,14 @@ def grapdatas(home, path, depth, mode, specs=None):
 # runtime_tmpdir = '%HOMEPATH%\\AppData\\Local\\Temp\\' + name
 
 
-def find_api_ms_win_crt_path(architecture='amd64'):
-    # 'x86' or 'amd64'
-    existing_dirs = []
-    basedir = os.path.join('C:\\Windows\\WinSxS')
-    for dirname in os.listdir(basedir):
-        if not dirname.startswith(architecture):
-            continue
-        absdir = os.path.join(basedir, dirname)
-        if not os.path.isdir(absdir):
-            continue
-
-        for name in os.listdir(absdir):
-            if 'api-ms-win-crt-' in name:
-                existing_dirs += [absdir]
-
-    return list(set(existing_dirs))[0]
-
-
 path = Path(
     home='',
     base=os.path.join('source', 'base'),
-    assets='assets',
+    assets=os.path.join('assets'),
     icon=os.path.join('assets', 'icon', 'icon.ico'),
     dlls=os.path.join('assets', 'dlls'),
-    output=os.path.join('build', '{}.exe'.format(appname)),
-    winsxs=find_api_ms_win_crt_path()
+    output=os.path.join('build', '{}.exe'.format(__appname__)),
+    winsxs=__api_ms_win_crt_path__
 )
 
 a = Analysis([os.path.join('source', 'main.py')],
@@ -89,7 +61,12 @@ a = Analysis([os.path.join('source', 'main.py')],
              pathex=[path.home, path.assets, path.dlls, path.winsxs],
              hiddenimports=['base'])
 
-a.datas += grapdatas(path.home, 'assets', 1, 'data', ['icon.ico'])
+a.datas += grapdatas(path.assets, 'icon', 2, 'data', ['icon.ico'])
+
+print('-' * 100)
+for v in a.datas:
+    print(v)
+print('-' * 100)
 
 pyz = PYZ(a.pure)
 
@@ -105,4 +82,4 @@ else:
               uac_admin=True, uac_uiaccess=True, upx=upx, strip=None,
               debug=debug, console=debug, exclude_binaries=1)
     dist = COLLECT(exe, a.binaries, a.zipfiles, a.datas,
-                   upx=upx, strip=None, name=appname)
+                   upx=upx, strip=None, name=__appname__)

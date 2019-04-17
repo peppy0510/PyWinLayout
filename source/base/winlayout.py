@@ -9,51 +9,16 @@ email: peppy0510@hotmail.com
 
 import operator
 import os
-import screeninfo
 import time
 import win32api
 import win32con
 import win32gui
 import win32process
 
-
-class Coordination():
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class Rectangle():
-
-    def __init__(self, offset_x, offset_y, finish_x, finish_y):
-        self.offset = Coordination(offset_x, offset_y)
-        self.finish = Coordination(finish_x, finish_y)
-
-    @property
-    def width(self):
-        return self.finish.x - self.offset.x
-
-    @property
-    def height(self):
-        return self.finish.y - self.offset.y
-
-    @property
-    def orientation(self):
-        if self.width > self.height:
-            return 'landscape'
-        return 'portrait'
-
-
-class ScreenShown():
-
-    def __init__(self, offset_x, offset_y, finish_x, finish_y):
-        self.offset = Coordination(offset_x, offset_y)
-        self.finish = Coordination(finish_x, finish_y)
-        self.width = self.finish.x - self.offset.x
-        self.height = self.finish.y - self.offset.y
-        direction = -1 if self.width < 0 or self.height < 0 else 1
-        self.size = abs(self.width * self.height) * direction
+from .coordination import Coordination
+from .rectangle import Rectangle
+from .screens import ScreenShown
+from .screens import get_screens
 
 
 class WindowInformation():
@@ -91,30 +56,8 @@ class WindowLayoutHandler(WindowInformation, Rectangle):
         self.layout_index = 0
         self.refresh()
 
-    def get_screens(self):
-        screens = sorted([Rectangle(v.x, v.y, v.x + v.width, v.y + v.height)
-                          for v in screeninfo.get_monitors()], key=operator.attrgetter('offset.x'))
-
-        for screen in screens:
-            monitor_info = win32api.GetMonitorInfo(
-                win32api.MonitorFromPoint((screen.offset.x, screen.offset.y)))
-
-            monx, mony, monw, monh = monitor_info.get('Monitor')
-            workx, worky, workw, workh = monitor_info.get('Work')
-
-            if monw == workw and worky != mony:  # taskbar top
-                screen.offset.y += worky - mony
-            if monw == workw and worky == mony:  # taskbar bottom
-                screen.finish.y -= monh - workh
-            if monh == workh and workx != monx:  # taskbar left
-                screen.offset.x += workx - monx
-            if monh == workh and workx == monx:  # taskbar right
-                screen.finish.x -= monw - workw
-
-        return screens
-
     def refresh(self):
-        self.screens = self.get_screens()
+        self.screens = get_screens()
         try:
             rect = win32gui.GetWindowRect(self.hwnd)
             self.title = win32gui.GetWindowText(self.hwnd)

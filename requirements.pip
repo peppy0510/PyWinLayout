@@ -1,5 +1,6 @@
 wmi
 mido
+pillow
 winshell
 wxpython
 keyboard

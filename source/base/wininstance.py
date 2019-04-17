@@ -33,6 +33,11 @@ def get_real_cwd(p):
     return os.path.join(p.cwd(), relcwd).rstrip(' ' + os.path.sep)
 
 
+def get_current_real_cwq():
+    cp = get_current_process()
+    return get_real_cwd(cp)
+
+
 def kill_existing_instances():
     pid = int(os.getpid())
     cp = get_current_process()
