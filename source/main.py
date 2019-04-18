@@ -2,7 +2,7 @@
 
 
 __appname__ = 'PyWinLayout'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Taehong Kim'
 __email__ = 'peppy0510@hotmail.com'
 __license__ = ''

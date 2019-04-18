@@ -17,41 +17,27 @@ import zipfile
 from PIL import Image
 
 
-path = os.environ['PATH']
-os.environ['PATH'] = ';'.join([path, os.path.join(path.split(';')[0], 'Scripts')])
+# path = os.environ['PATH']
+# os.environ['PATH'] = ';'.join([path, os.path.join(path.split(';')[0], 'Scripts')])
 
 
-class Build():
+class BuildBase():
 
-    @classmethod
-    def run(self, run_installer=True):
-        self.make_icon()
-        self.set_version()
-        self.set_appname()
-        self.set_api_ms_win_crt_path()
-        self.remove_build()
-        self.make_build()
-        # self.run_build()
-        self.make_installer()
-        self.compress_installer()
-        if run_installer:
-            self.run_installer()
-
-    @classmethod
-    def make_icon(self):
-        directory = os.path.join('assets', 'icon')
-        src_path = os.path.join(directory, 'icon.png')
-        dst_path = os.path.join(directory, 'icon.ico')
-        icon_sizes = [(v, v) for v in (16, 24, 32, 48, 64, 96, 128, 256,)]
-        img = Image.open(src_path)
-        if os.path.exists(dst_path):
-            os.remove(dst_path)
-        img.save(dst_path, sizes=icon_sizes)
+    class path():
+        dist = 'dist'
+        build = 'build'
+        icondir = os.path.join('assets', 'icon')
+        iconsrc = os.path.join(icondir, 'icon.png')
+        icondst = os.path.join(icondir, 'icon.ico')
+        mainsrc = os.path.join('source', 'main.py')
+        spec = 'makebuild.spec'
+        iss = 'makeinstaller.iss'
+        winsxs = 'C:\\Windows\\WinSxS'
+        issc = r'C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe'
 
     @classmethod
     def remove_build(self):
-        remove_paths = ['dist', 'build']
-        for path in remove_paths:
+        for path in [self.path.build, self.path.dist]:
             path = os.path.abspath(path)
             if os.path.isdir(path):
                 try:
@@ -59,6 +45,14 @@ class Build():
                     # print('removing %s' % (path))
                 except Exception:
                     print('removing failed %s' % (path))
+
+    @classmethod
+    def make_icon(self):
+        icon_sizes = [(v, v) for v in (16, 24, 32, 48, 64, 96, 128, 256,)]
+        img = Image.open(self.path.iconsrc)
+        if os.path.exists(self.path.icondst):
+            os.remove(self.path.icondst)
+        img.save(self.path.icondst, sizes=icon_sizes)
 
     @classmethod
     def subfile(self, ptrn, repl, path, **kwargs):
@@ -75,54 +69,23 @@ class Build():
         return content
 
     @classmethod
-    def make_build(self):
-        proc = subprocess.Popen('pyinstaller makebuild.spec', shell=True)
-        proc.communicate()
-
-    @classmethod
-    def get_appname(self):
-        ptrn = (r'''[_]{0,2}appname[_]{0,2}[\s]{1,}[=]{1}[\s]{1,}'''
-                r'''['"]{1}([a-zA-Z\s]{1,})['"]{1}''')
-        with open(os.path.join('source', 'main.py'), 'r') as file:
+    def get_info_from_source(self, key):
+        ptrn = (r'''[_]{0,2}%s[_]{0,2}[\s]{1,}[=]{1}[\s]{1,}'''
+                r'''['"]{1}([\w\d\.\-\s]{1,})['"]{1}''') % (key)
+        with open(self.path.mainsrc, 'r') as file:
             content = file.read()
             m = re.search(ptrn, content)
             if m:
                 return m.group(1)
-
-    @classmethod
-    def set_appname(self):
-        ptrn = (r'''(__appname__[\s]{1,}=[\s]{1,}[\'\"]{1})'''
-                r'''[\w\d\s\-\_\.]{0,}([\'\"]{1})''')
-        appname = self.get_appname()
-        if appname:
-            self.subfile(ptrn, r'\g<1>{}\g<2>'.format(appname), 'makebuild.spec')
-
-    @classmethod
-    def get_version(self):
-        ptrn = (r'''[_]{0,2}version[_]{0,2}[\s]{1,}[=]{1}[\s]{1,}'''
-                r'''['"]{1}([\d]{1,}\.[\d]{1,}\.[\d]{1,})['"]{1}''')
-        with open(os.path.join('source', 'main.py'), 'r') as file:
-            content = file.read()
-            m = re.search(ptrn, content)
-            if m:
-                return m.group(1)
-
-    @classmethod
-    def set_version(self):
-        ptrn = r'''([\d]{1,}\.[\d]{1,}\.[\d]{1,})'''
-        version = self.get_version()
-        if version:
-            self.subfile(ptrn, version, 'makeinstaller.iss')
 
     @classmethod
     def set_api_ms_win_crt_path(self, architecture='amd64'):
         # 'x86' or 'amd64'
         existing_dirs = []
-        basedir = 'C:\\Windows\\WinSxS'
-        for dirname in os.listdir(basedir):
+        for dirname in os.listdir(self.path.winsxs):
             if not dirname.startswith(architecture):
                 continue
-            absdir = os.path.join(basedir, dirname)
+            absdir = os.path.join(self.path.winsxs, dirname)
             if not os.path.isdir(absdir):
                 continue
 
@@ -135,32 +98,36 @@ class Build():
         ptrn = (r'''(__api_ms_win_crt_path__[\s]{1,}=[\s]{1,}[\'\"]{1})'''
                 r'''[\w\d\s\-\_\.\:\\]{0,}([\'\"]{1})''')
         path = path.replace('\\', '\\\\\\\\')
-        self.subfile(ptrn, r'\g<1>{}\g<2>'.format(path), 'makebuild.spec')
+        self.subfile(ptrn, r'\g<1>{}\g<2>'.format(path), self.path.spec)
 
     @classmethod
-    def run_build(self):
-        name = self.get_appname()
-        command = '"{}"'.format(os.path.join('dist', '{}.exe'.format(name)))
+    def make_build(self):
+        command = 'pyinstaller {}'.format(self.path.spec)
         proc = subprocess.Popen(command, shell=True)
         proc.communicate()
 
     @classmethod
     def make_installer(self):
-        for name in os.listdir('dist'):
+        for name in os.listdir(self.path.dist):
             if os.path.splitext(name)[0][-1].isdigit():
-                os.remove(os.path.join('dist', name))
+                os.remove(os.path.join(self.path.dist, name))
+        command = '"{}" "{}"'.format(self.path.issc, self.path.iss)
+        proc = subprocess.Popen(command, shell=True)
+        proc.communicate()
 
-        issc = r'''"C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe"'''
-        command = '''%s "makeinstaller.iss"''' % (issc)
+    @classmethod
+    def run_build(self):
+        name = self.get_appname()
+        command = '"{}"'.format(os.path.join(self.path.dist, '{}.exe'.format(name)))
         proc = subprocess.Popen(command, shell=True)
         proc.communicate()
 
     @classmethod
     def get_installer_name(self):
-        with open('makeinstaller.iss', 'r') as file:
+        with open(self.path.iss, 'r') as file:
             for line in file.read().split('\n'):
-                if line.startswith('OutputBaseFilename'):
-                    return line.split('=')[-1].strip()
+                if 'OutputBaseFilename' in line:
+                    return line.split('=')[-1].strip('" ')
 
     @classmethod
     def compress_installer(self):
@@ -168,25 +135,104 @@ class Build():
         if not name:
             return
         src_name = '{}.exe'.format(name)
-        src_path = os.path.join('dist', src_name)
-        dst_path = os.path.join('dist', '{}.zip'.format(name))
+        src_path = os.path.join(self.path.dist, src_name)
+        dst_path = os.path.join(self.path.dist, '{}.zip'.format(name))
         file = zipfile.ZipFile(dst_path, 'w', zipfile.ZIP_DEFLATED)
         file.write(src_path, src_name)
-        # zipdir('tmp/', zipf)
         file.close()
-        # for root, dirs, files in os.walk(path):
-        #     for file in files:
-        #         ziph.write(os.path.join(root, file))
 
     @classmethod
     def run_installer(self):
         name = self.get_installer_name()
         if not name:
             return
-        command = '"{}"'.format(os.path.join('dist', name))
+        command = '"{}"'.format(os.path.join(self.path.dist, name))
         proc = subprocess.Popen(command, shell=True)
         proc.communicate()
 
+
+class Build(BuildBase):
+
+    @classmethod
+    def run(self, auto_build_info=True, run_installer=True):
+
+        self.make_icon()
+
+        if auto_build_info:
+
+            self.set_dist()
+            self.set_author()
+            self.set_appname()
+            self.set_version()
+
+        self.set_api_ms_win_crt_path()
+        self.remove_build()
+        self.make_build()
+        # self.run_build()
+        self.make_installer()
+        self.compress_installer()
+
+        if run_installer:
+            self.run_installer()
+
+    @classmethod
+    def get_appname(self):
+        return self.get_info_from_source('appname')
+
+    @classmethod
+    def get_version(self):
+        return self.get_info_from_source('version')
+
+    @classmethod
+    def get_author(self):
+        return self.get_info_from_source('author')
+
+    @classmethod
+    def set_appname(self):
+        appname = self.get_appname()
+        if appname:
+            ptrn = (r'''(__appname__[\s]{1,}=[\s]{1,}[\'\"]{1})'''
+                    r'''[\w\d\s\-\_\.]{0,}([\'\"]{1})''')
+            self.subfile(ptrn, r'\g<1>{}\g<2>'.format(appname), self.path.spec)
+
+            keys = r'|'.join([
+                'AppName', 'AppVerName',
+                'DefaultDirName', 'DefaultGroupName',
+                'UninstallDisplayIcon', 'OutputBaseFilename', 'Name', 'Filename'])
+            version_ptrn = r'[\d]{1,}\.[\d]{1,}\.[\d]{1,}'
+            ptrn = (r'(%s)'
+                    r'([\s]{1,}[\=\:]{1}[\s]{1,}\")'
+                    r'(\{[a-z]{1,}\}\\){0,1}'
+                    r'[\w\d\s]{1,}'
+                    r'(|\.exe|[\s\-\_\.]{1}%s[\s\-\_\.]{0,}[\w\d]{0,})'
+                    r'(\")') % (keys, version_ptrn)
+            self.subfile(ptrn, r'\g<1>\g<2>\g<3>{}\g<4>\g<5>'.format(appname), self.path.iss)
+
+    @classmethod
+    def set_version(self):
+        version = self.get_version()
+        if version:
+            ptrn = r'([\d]{1,}\.[\d]{1,}\.[\d]{1,})'
+            self.subfile(ptrn, version, self.path.iss)
+
+    @classmethod
+    def set_author(self):
+        author = self.get_author()
+        if author:
+            keys = r'|'.join([
+                'AppCopyright', 'AppPublisher',
+                'VersionInfoCompany', 'VersionInfoCopyright'])
+            ptrn = r'(%s)([\s]{1,}=[\s]{1,}\")[\w\d\s\.\-\_]{1,}(\")' % (keys)
+            self.subfile(ptrn, r'\g<1>\g<2>{}\g<3>'.format(author), self.path.iss)
+
+    @classmethod
+    def set_dist(self):
+        ptrn = (r'(Source|OutputDir)'
+                r'([\s]{0,}\:[\s]{0,}\")'
+                r'[\w\d\s\.\-\_]{1,}'
+                r'(\\\*){0,}'
+                r'(\")')
+        self.subfile(ptrn, r'\g<1>\g<2>{}\g<3>\g<4>'.format(self.path.dist), self.path.iss)
 
 if __name__ == '__main__':
     from io import TextIOWrapper
