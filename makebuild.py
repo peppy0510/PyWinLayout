@@ -191,7 +191,7 @@ class Build(BuildBase):
     def set_appname(self):
         appname = self.get_appname()
         if appname:
-            ptrn = (r'''(__appname__[\s]{1,}=[\s]{1,}[\'\"]{1})'''
+            ptrn = (r'''(__appname__[\s]{0,}=[\s]{0,}[\'\"]{1})'''
                     r'''[\w\d\s\-\_\.]{0,}([\'\"]{1})''')
             self.subfile(ptrn, r'\g<1>{}\g<2>'.format(appname), self.path.spec)
 
@@ -201,7 +201,7 @@ class Build(BuildBase):
                 'UninstallDisplayIcon', 'OutputBaseFilename', 'Name', 'Filename'])
             version_ptrn = r'[\d]{1,}\.[\d]{1,}\.[\d]{1,}'
             ptrn = (r'(%s)'
-                    r'([\s]{1,}[\=\:]{1}[\s]{1,}\")'
+                    r'([\s]{0,}[\=\:]{1}[\s]{0,}\")'
                     r'(\{[a-z]{1,}\}\\){0,1}'
                     r'[\w\d\s]{1,}'
                     r'(|\.exe|[\s\-\_\.]{1}%s[\s\-\_\.]{0,}[\w\d]{0,})'
