@@ -24,6 +24,12 @@
 | `Win+Num4(Left)`       | `Win+Num5(Middle)` | `Win+Num6(Right)`       |
 | `Win+Num1(BottomLeft)` | `Win+Num2(Bottom)` | `Win+Num3(BottomRight)` |
 
+| `Laptop keyboard`              |                            |                                 |
+|:------------------------------:|:--------------------------:|:-------------------------------:|
+| `alt+ctrl+shift+7(TopLeft)`    | `alt+ctrl+shift+8(Top)`    | `alt+ctrl+shift+9(TopRight)`    |
+| `alt+ctrl+shift+U(Left)`       | `alt+ctrl+shift+I(Middle)` | `alt+ctrl+shift+O(Right)`       |
+| `alt+ctrl+shift+J(BottomLeft)` | `alt+ctrl+shift+K(Bottom)` | `alt+ctrl+shift+L(BottomRight)` |
+
 * Each hotkey is switched differently depending on the aspect ratio of the screen.
 * To control windows such as Task Manager, you must run in administrator mode.
 

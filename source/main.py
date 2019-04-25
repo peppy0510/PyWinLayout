@@ -2,7 +2,7 @@
 
 
 __appname__ = 'PyWinLayout'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Taehong Kim'
 __email__ = 'peppy0510@hotmail.com'
 __license__ = ''
@@ -183,25 +183,27 @@ class MainFrame(wx.Frame):
 
     def bind_hotkey(self):
         for preset in LAYOUT_PRESETS:
-            self.RegisterHotKey(preset['event_id'], *preset['codes'])
-            self.Bind(wx.EVT_HOTKEY, self.handle_hotkey, id=preset['event_id'])
+            for i in range(len(preset['codes'])):
+                self.RegisterHotKey(preset['event_ids'][i], *preset['codes'][i])
+                self.Bind(wx.EVT_HOTKEY, self.handle_hotkey, id=preset['event_ids'][i])
 
     def unbind_hotkey(self):
         for preset in LAYOUT_PRESETS:
-            self.Unbind(wx.EVT_HOTKEY, id=preset['event_id'])
-            self.UnregisterHotKey(preset['event_id'])
+            for i in range(len(preset['codes'])):
+                self.Unbind(wx.EVT_HOTKEY, id=preset['event_ids'][i])
+                self.UnregisterHotKey(preset['event_ids'][i])
 
     def handle_hotkey(self, event):
         for preset in LAYOUT_PRESETS:
-            if preset['event_id'] == event.GetId():
-                self.window_layout_manager.resize_foreground_window(preset)
+            for i in range(len(preset['codes'])):
+                if preset['event_ids'][i] == event.GetId():
+                    self.window_layout_manager.resize_foreground_window(preset)
 
     def OnClose(self, event=None):
         self.unbind_hotkey()
         # self.other_instance_watcher.Stop()
         wx.CallAfter(self.taskbar.Destroy)
         wx.CallAfter(self.Destroy)
-        # print('OnClose')
 
 
 class HotKeyApp(wx.App):
