@@ -8,6 +8,7 @@ email: peppy0510@hotmail.com
 
 
 import operator
+import pywintypes  # noqa # pre-load dll for win32api
 import screeninfo
 import win32api
 
