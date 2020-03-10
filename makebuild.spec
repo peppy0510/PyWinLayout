@@ -12,8 +12,11 @@ import os
 
 
 debug = False
+
 upx = True
 onefile = True
+uac_admin = False
+uac_uiaccess = True
 
 
 PYZ = PYZ  # noqa
@@ -23,7 +26,7 @@ Analysis = Analysis  # noqa
 
 
 __appname__ = 'PyWinLayout'
-__api_ms_win_crt_path__ = 'C:\\Windows\\WinSxS\\amd64_microsoft-windows-m..namespace-downlevel_31bf3856ad364e35_10.0.17763.1_none_b82ac495d943b9d7'
+__api_ms_win_crt_path__ = 'C:\\Windows\\WinSxS\\amd64_microsoft-windows-m..namespace-downlevel_31bf3856ad364e35_10.0.18362.1_none_99c24aabfe52bcbb'
 
 
 class Path():
@@ -56,12 +59,14 @@ path = Path(
     winsxs=__api_ms_win_crt_path__
 )
 
-a = Analysis([os.path.join('source', 'main.py')],
+a = Analysis([os.path.join('source', 'main.pyw')],
              hookspath=[path.home, path.base, path.assets],
              pathex=[path.home, path.assets, path.dlls, path.winsxs],
              hiddenimports=['base'])
 
 a.datas += grapdatas(path.assets, 'icon', 2, 'data', ['icon.ico'])
+# a.datas += [('PyWinLayout.exe.manifest', 'PyWinLayout.exe.manifest', 'data')]
+# a.datas += grapdatas(path.assets, 'dlls', 2, 'data', ['API-MS-Win-core-file-l2-1-0.dll'])
 
 print('-' * 100)
 for v in a.datas:
@@ -73,13 +78,14 @@ pyz = PYZ(a.pure)
 if onefile:
     exe = EXE(pyz, a.scripts + [('O', '', 'OPTION')],
               a.binaries, a.zipfiles, a.datas,
-              uac_admin=True, uac_uiaccess=True,
-              icon=path.icon, name=path.output,
+              name=path.output, icon=path.icon,
+              uac_admin=uac_admin, uac_uiaccess=uac_uiaccess,
               upx=upx, strip=None, debug=debug, console=debug)
     # runtime_tmpdir='%HOMEPATH%\\AppData\\Local\\Temp\\' + name
 else:
     exe = EXE(pyz, a.scripts, name=path.output, icon=path.icon,
-              uac_admin=True, uac_uiaccess=True, upx=upx, strip=None,
-              debug=debug, console=debug, exclude_binaries=1)
+              uac_admin=uac_admin, uac_uiaccess=uac_uiaccess,
+              upx=upx, strip=None, debug=debug, console=debug,
+              exclude_binaries=1)
     dist = COLLECT(exe, a.binaries, a.zipfiles, a.datas,
                    upx=upx, strip=None, name=__appname__)

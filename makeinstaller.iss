@@ -2,19 +2,19 @@
 
 [Setup]
 AppName="PyWinLayout"
-AppVerName="PyWinLayout 0.1.2"
-DefaultDirName="{pf}\PyWinLayout"
+AppVerName="PyWinLayout 0.1.3"
+DefaultDirName="{commonpf}\PyWinLayout"
 DefaultGroupName="PyWinLayout"
-AppVersion="0.1.2"
+AppVersion="0.1.3"
 AppCopyright="Taehong Kim"
 AppPublisher="Taehong Kim"
 UninstallDisplayIcon="{app}\PyWinLayout.exe"
 Compression=lzma2/max
 SolidCompression=yes
 OutputDir="dist"
-OutputBaseFilename="PyWinLayout-0.1.2-Setup"
-; VersionInfoVersion="0.1.2"
-VersionInfoProductVersion="0.1.2"
+OutputBaseFilename="PyWinLayout-0.1.3-Setup"
+; VersionInfoVersion="0.1.3"
+VersionInfoProductVersion="0.1.3"
 VersionInfoCompany="Taehong Kim"
 VersionInfoCopyright="Taehong Kim"
 ArchitecturesInstallIn64BitMode="x64"

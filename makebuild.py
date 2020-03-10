@@ -26,14 +26,14 @@ class BuildBase():
     class path():
         dist = 'dist'
         build = 'build'
-        icondir = os.path.join('assets', 'icon')
+        icondir = os.path.abspath('assets/icon')
         iconsrc = os.path.join(icondir, 'icon.png')
         icondst = os.path.join(icondir, 'icon.ico')
-        mainsrc = os.path.join('source', 'main.py')
+        mainsrc = os.path.abspath('source/main.pyw')
         spec = 'makebuild.spec'
         iss = 'makeinstaller.iss'
-        winsxs = 'C:\\Windows\\WinSxS'
-        issc = r'C:\\Program Files (x86)\\Inno Setup 5\\ISCC.exe'
+        winsxs = os.path.abspath('C:/Windows/WinSxS')
+        issc = os.path.abspath('C:/Program Files (x86)/Inno Setup 6/ISCC.exe')
 
     @classmethod
     def remove_build(self):
@@ -168,7 +168,7 @@ class Build(BuildBase):
         self.set_api_ms_win_crt_path()
         self.remove_build()
         self.make_build()
-        # self.run_build()
+        self.run_build()
         self.make_installer()
         self.compress_installer()
 
@@ -233,6 +233,7 @@ class Build(BuildBase):
                 r'(\\\*){0,}'
                 r'(\")')
         self.subfile(ptrn, r'\g<1>\g<2>{}\g<3>\g<4>'.format(self.path.dist), self.path.iss)
+
 
 if __name__ == '__main__':
     from io import TextIOWrapper

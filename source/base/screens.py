@@ -10,6 +10,7 @@ email: peppy0510@hotmail.com
 import operator
 import pywintypes  # noqa # pre-load dll for win32api
 import screeninfo
+import time
 import win32api
 
 from .coordination import Coordination
@@ -27,9 +28,21 @@ class ScreenShown():
         self.size = abs(self.width * self.height) * direction
 
 
+def try_to_get_screens(trial=50):
+    for i in range(trial):
+        monitors = screeninfo.get_monitors()
+        screens = sorted([Rectangle(
+            v.x, v.y, v.x + v.width, v.y + v.height
+        ) for v in monitors], key=operator.attrgetter('offset.x'))
+        if len(screens):
+            return screens
+        time.sleep(0.0001)
+    return screens
+
+
 def get_screens():
-    screens = sorted([Rectangle(v.x, v.y, v.x + v.width, v.y + v.height)
-                      for v in screeninfo.get_monitors()], key=operator.attrgetter('offset.x'))
+
+    screens = try_to_get_screens()
 
     for screen in screens:
         monitor_info = win32api.GetMonitorInfo(

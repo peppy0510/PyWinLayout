@@ -122,6 +122,7 @@ class WindowLayoutHandler(WindowInformation, Rectangle):
 
     def __resize__(self, x, y, width, height, repaint=True):
         try:
+            win32gui.ShowWindow(self.hwnd, win32con.SW_NORMAL)
             win32gui.MoveWindow(self.hwnd, x, y, width, height, repaint)
             return True
         except Exception:
