@@ -96,10 +96,15 @@ class WindowLayoutHandler(WindowInformation, Rectangle):
         self.preset = preset
         self.refresh()
         x, y, width, height = self.get_next_rect()
+
         if not self.__resize__(x, y, width, height):
             return
 
         rect = win32gui.GetWindowRect(self.hwnd)
+        # crect = win32gui.GetClientRect(self.hwnd)
+        # frame_x = ((rect[2] - rect[0]) - (crect[2] - crect[0]))
+        # frame_y = ((rect[3] - rect[1]) - (crect[3] - crect[1]))
+        # print(frame_x, frame_y)
         delta_x = rect[2] - self.screen.finish.x
         delta_y = rect[3] - self.screen.finish.y
 
@@ -110,7 +115,6 @@ class WindowLayoutHandler(WindowInformation, Rectangle):
             if not self.__resize__(x, y, width, height):
                 return
 
-        rect = win32gui.GetWindowRect(self.hwnd)
         delta_x = rect[2] - self.screen.finish.x
         delta_y = rect[3] - self.screen.finish.y
         # bottom align if window has minimum height and overflow
