@@ -17,51 +17,47 @@ LAYOUT_PRESETS = [
         'hotkey': 'win+num5',
         'hotkeys': ['win+num5', 'alt+ctrl+shift+I'],
         'landscape': [((1 - v) / 2, 0.00, v, 1.00) for v in (1.00, 0.50, 0.34,)],
-        'portrait': [(0.00, (1 - v) / 2, 1.00, v) for v in (1.00, 0.50, 0.34, 0.2)] +
-        [(0.00, (v), 1.00, v) for v in (0.2, )] +
-        [(0.00, (1 - v * 2), 1.00, v) for v in (0.2, )]
+        'portrait': [(0.00, (1 - v) / 2, 1.00, v) for v in (1.00, 0.50,)]
     }, {
         'hotkey': 'win+num2',
         'hotkeys': ['win+num2', 'alt+ctrl+shift+K'],
         'landscape': [((1 - v) / 2, 0.50, v, 0.50) for v in (1.00, 0.50, 0.34,)],
-        'portrait': [(0.00, 1 - v, 1.00, v) for v in (0.80, 0.75, 0.60, 0.50, 0.33, 0.25, 0.2)]
+        'portrait': [(0.00, 1 - v, 1.00, v) for v in (0.75, 0.50, 0.25,)]
     }, {
         'hotkey': 'win+num8',
         'hotkeys': ['win+num8', 'alt+ctrl+shift+8'],
-        'landscape': [((1 - v) / 2, 0.00, v, 0.50) for v in (1.00, 0.50, 0.34)],
-        'portrait': [(0.00, 0.00, 1.00, v) for v in (0.80, 0.75, 0.60, 0.50, 0.33, 0.25, 0.2)]
+        'landscape': [((1 - v) / 2, 0.00, v, 0.50) for v in (1.00, 0.50, 0.34,)],
+        'portrait': [(0.00, 0.00, 1.00, v) for v in (0.75, 0.50, 0.25,)]
     }, {
         'hotkey': 'win+num4',
         'hotkeys': ['win+num4', 'alt+ctrl+shift+U'],
         'landscape': [(0.00, 0.00, v, 1.00) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.00, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50, 0.34,)]
+        'portrait': [(0.00, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50,)]
     }, {
         'hotkey': 'win+num6',
         'hotkeys': ['win+num6', 'alt+ctrl+shift+O'],
         'landscape': [(1 - v, 0.00, v, 1.00) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.50, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50, 0.34,)]
+        'portrait': [(0.50, (1 - v) / 2, 0.50, v) for v in (1.00, 0.50,)]
     }, {
         'hotkey': 'win+num1',
         'hotkeys': ['win+num1', 'alt+ctrl+shift+J'],
-        'landscape': [(0.00, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)] +
-        [(0.00, 0.15, v, 0.85) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.00, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.33, 0.25,)]
+        'landscape': [(0.00, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)],
+        'portrait': [(0.00, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     }, {
         'hotkey': 'win+num3',
         'hotkeys': ['win+num3', 'alt+ctrl+shift+L'],
-        'landscape': [(1 - v, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)] +
-        [(1 - v, 0.15, v, 0.85) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.50, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.33, 0.25,)]
+        'landscape': [(1 - v, 0.50, v, 0.50) for v in (0.67, 0.50, 0.33,)],
+        'portrait': [(0.50, 1 - v, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     }, {
         'hotkey': 'win+num7',
         'hotkeys': ['win+num7', 'alt+ctrl+shift+7'],
         'landscape': [(0.00, 0.00, v, 0.50) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.00, 0.00, 0.50, v) for v in (0.75, 0.50, 0.33, 0.25,)]
+        'portrait': [(0.00, 0.00, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     }, {
         'hotkey': 'win+num9',
         'hotkeys': ['win+num9', 'alt+ctrl+shift+9'],
         'landscape': [(1 - v, 0.00, v, 0.50) for v in (0.67, 0.50, 0.33,)],
-        'portrait': [(0.50, 0.00, 0.50, v) for v in (0.75, 0.50, 0.33, 0.25,)]
+        'portrait': [(0.50, 0.00, 0.50, v) for v in (0.75, 0.50, 0.25,)]
     },
 ]
 
