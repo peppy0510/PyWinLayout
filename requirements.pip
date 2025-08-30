@@ -1,10 +1,10 @@
-wmi
+cryptography
+keyboard
 mido
 pillow
-winshell
-wxpython
-keyboard
-screeninfo
-cryptography
-python-rtmidi
 pyinstaller
+python-rtmidi
+screeninfo
+winshell
+wmi
+wxpython
