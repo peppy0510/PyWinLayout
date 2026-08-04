@@ -9,3 +9,6 @@ build
 desktop.ini
 .sublime-workspace
 *.sublime-workspace
+
+# AI assistant notes — keep local, do not publish
+/CLAUDE.md

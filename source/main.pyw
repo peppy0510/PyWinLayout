@@ -18,7 +18,7 @@ import wx.adv
 
 from base import ShortCut
 from base import WindowLayoutManager
-from base import get_current_real_cwq
+from base import get_current_real_cwd
 from base import get_screens
 from base import kill_existing_instances
 from base import run_as_admin  # noqa
@@ -91,7 +91,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
     def __init__(self, parent):
         super(TaskBarIcon, self).__init__()
         self.parent = parent
-        cwd = os.path.dirname(get_current_real_cwq())
+        cwd = os.path.dirname(get_current_real_cwd())
         self.icon_path = os.path.join(cwd, self.tray_icon_path)
         if hasattr(sys, '_MEIPASS'):
             self.icon_path = os.path.join(sys._MEIPASS, self.tray_icon_path)
@@ -154,7 +154,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
                 arguments = ''
                 icon = ''
             else:
-                working_directory = os.path.dirname(get_current_real_cwq())
+                working_directory = os.path.dirname(get_current_real_cwd())
                 target_path = 'pythonw.exe'
                 arguments = '"{}"'.format(os.path.join(
                     working_directory, 'source', os.path.basename(__file__)))
