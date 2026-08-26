@@ -5,7 +5,7 @@
 *.pyo
 dist
 build
-/venv
+/.venv
 desktop.ini
 .sublime-workspace
 *.sublime-workspace
