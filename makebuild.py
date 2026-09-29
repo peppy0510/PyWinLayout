@@ -7,6 +7,7 @@ email: peppy0510@hotmail.com
 '''
 
 
+import glob
 import os
 import re
 import shutil
@@ -33,7 +34,7 @@ class BuildBase():
         spec = 'makebuild.spec'
         iss = 'makeinstaller.iss'
         winsxs = os.path.abspath('C:/Windows/WinSxS')
-        issc = os.path.abspath('C:/Program Files (x86)/Inno Setup 6/ISCC.exe')
+        issc = max(glob.glob('C:\\Program Files*\\Inno Setup *\\ISCC.exe'), default='')
 
     @classmethod
     def remove_build(self):
@@ -63,7 +64,7 @@ class BuildBase():
             content = file.read()
             content = re.sub(ptrn, repl, content, **kwargs)
 
-        with open(path, 'w', encoding='utf-8') as file:
+        with open(path, 'w', encoding='utf-8', newline='\n') as file:
             file.write(content)
 
         return content
@@ -72,7 +73,7 @@ class BuildBase():
     def get_info_from_source(self, key):
         ptrn = (r'''[_]{0,2}%s[_]{0,2}[\s]{1,}[=]{1}[\s]{1,}'''
                 r'''['"]{1}([\w\d\.\-\s]{1,})['"]{1}''') % (key)
-        with open(self.path.mainsrc, 'r') as file:
+        with open(self.path.mainsrc, 'r', encoding='utf-8') as file:
             content = file.read()
             m = re.search(ptrn, content)
             if m:
@@ -94,11 +95,8 @@ class BuildBase():
                     existing_dirs += [absdir]
         if not existing_dirs:
             return
-        path = list(set(existing_dirs))[0]
-        ptrn = (r'''(__api_ms_win_crt_path__[\s]{1,}=[\s]{1,}[\'\"]{1})'''
-                r'''[\w\d\s\-\_\.\:\\]{0,}([\'\"]{1})''')
-        path = path.replace('\\', '\\\\\\\\')
-        self.subfile(ptrn, r'\g<1>{}\g<2>'.format(path), self.path.spec)
+        # machine specific, so hand it to the spec through the environment
+        os.environ['API_MS_WIN_CRT_PATH'] = list(set(existing_dirs))[0]
 
     @classmethod
     def make_build(self):

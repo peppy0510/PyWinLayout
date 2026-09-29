@@ -3,7 +3,7 @@
 [Setup]
 AppName="PyWinLayout"
 AppVerName="PyWinLayout 0.1.3"
-DefaultDirName="{commonpf}\PyWinLayout"
+DefaultDirName="{autopf}\PyWinLayout"
 DefaultGroupName="PyWinLayout"
 AppVersion="0.1.3"
 AppCopyright="Taehong Kim"
@@ -17,7 +17,7 @@ OutputBaseFilename="PyWinLayout-0.1.3-Setup"
 VersionInfoProductVersion="0.1.3"
 VersionInfoCompany="Taehong Kim"
 VersionInfoCopyright="Taehong Kim"
-ArchitecturesInstallIn64BitMode="x64"
+ArchitecturesInstallIn64BitMode="x64compatible"
 
 [Files]
 Source: "dist\*"; DestDir: "{app}"; Flags: recursesubdirs

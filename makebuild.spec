@@ -9,6 +9,7 @@ email: peppy0510@hotmail.com
 
 import glob
 import os
+import sys
 
 
 debug = False
@@ -16,7 +17,7 @@ debug = False
 upx = True
 onefile = True
 uac_admin = False
-uac_uiaccess = True
+uac_uiaccess = False
 
 
 PYZ = PYZ  # noqa
@@ -26,7 +27,7 @@ Analysis = Analysis  # noqa
 
 
 __appname__ = 'PyWinLayout'
-__api_ms_win_crt_path__ = 'C:\\Windows\\WinSxS\\amd64_microsoft-windows-m..namespace-downlevel_31bf3856ad364e35_10.0.18362.1_none_99c24aabfe52bcbb'
+__api_ms_win_crt_path__ = os.environ.get('API_MS_WIN_CRT_PATH', '')
 
 
 class Path():
@@ -64,7 +65,7 @@ a = Analysis([os.path.join('source', 'main.pyw')],
              pathex=[path.home, path.assets, path.dlls, path.winsxs],
              hiddenimports=['base'])
 
-a.datas += grapdatas(path.assets, 'icon', 2, 'data', ['icon.ico'])
+a.datas += grapdatas(path.assets, 'icon', 2, 'DATA', ['icon.ico'])
 # a.datas += [('PyWinLayout.exe.manifest', 'PyWinLayout.exe.manifest', 'data')]
 # a.datas += grapdatas(path.assets, 'dlls', 2, 'data', ['API-MS-Win-core-file-l2-1-0.dll'])
 
