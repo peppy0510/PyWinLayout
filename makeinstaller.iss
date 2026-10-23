@@ -11,7 +11,7 @@ AppPublisher="Taehong Kim"
 UninstallDisplayIcon="{app}\PyWinLayout.exe"
 Compression=lzma2/max
 SolidCompression=yes
-OutputDir="dist"
+OutputDir=".dist"
 OutputBaseFilename="PyWinLayout-0.1.3-Setup"
 ; VersionInfoVersion="0.1.3"
 VersionInfoProductVersion="0.1.3"
@@ -20,7 +20,7 @@ VersionInfoCopyright="Taehong Kim"
 ArchitecturesInstallIn64BitMode="x64compatible"
 
 [Files]
-Source: "dist\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: ".dist\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Icons]
 Name: "{group}\PyWinLayout"; Filename: "{app}\PyWinLayout.exe"

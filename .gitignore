@@ -3,8 +3,8 @@
 *.txt
 *.pyc
 *.pyo
-dist
-build
+.dist
+.build
 /.venv
 desktop.ini
 .sublime-workspace

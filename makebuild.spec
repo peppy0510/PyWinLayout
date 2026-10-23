@@ -56,7 +56,7 @@ path = Path(
     assets=os.path.join('assets'),
     icon=os.path.join('assets', 'icon', 'icon.ico'),
     dlls=os.path.join('assets', 'dlls'),
-    output=os.path.join('build', '{}.exe'.format(__appname__)),
+    output=os.path.join('.build', '{}.exe'.format(__appname__)),
     winsxs=__api_ms_win_crt_path__
 )
 
